@@ -1,9 +1,11 @@
 <p align="center">
-  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&pause=1000&color=2196F3&center=true&vCenter=true&width=435&lines=Hi+there!+I'm+Facu+Basualdo;Backend+Developer;Node.js+%7C+Express+%7C+Docker+%7C+SQL;Always+Learning" alt="Typing SVG" />
+  <img src="./header.svg" width="800" alt="Facu Basualdo - Backend Developer" />
 </p>
 
 <p align="center">
   <a href="https://github.com/Facu-Basualdo"><img src="https://img.shields.io/badge/GitHub-0a0a0f?style=flat&logo=github&logoColor=00FFA3" alt="GitHub"/></a>&nbsp;
+  <a href="https://www.linkedin.com/in/facundo-basualdo/"><img src="https://img.shields.io/badge/LinkedIn-0a0a0f?style=flat&logo=linkedin&logoColor=00FFA3" alt="LinkedIn"/></a>&nbsp;
+  <a href="mailto:tuemail@gmail.com"><img src="https://img.shields.io/badge/Email-0a0a0f?style=flat&logo=gmail&logoColor=00FFA3" alt="Email"/></a>&nbsp;
   <img src="https://komarev.com/ghpvc/?username=Facu-Basualdo&color=00FFA3&style=flat&label=visitors" alt="Profile views"/>
 </p>
 
@@ -36,6 +38,9 @@ const facu = {
 ### 📌 Proyecto destacado
 
 <a href="https://github.com/Facu-Basualdo/MiFacu">
+  <picture>
+    <img src="./mifacu-logo.png" width="52" alt="MiFacu" align="left" style="margin-right: 12px;" />
+  </picture>
   <strong>MiFacu</strong>
   <br/>
   <sub>Sistema educativo completo para gestión académica. Plataforma moderna pensada para mejorar la experiencia de estudiantes y docentes.</sub>
