@@ -52,12 +52,13 @@ const facu = {
 
 ---
 
-### 📊 GitHub Stats
+### 🐍 Contribuciones
 
-<p align="center">
-  <img height="180em" src="https://github-readme-stats.vercel.app/api?username=Facu-Basualdo&show_icons=true&theme=tokyonight&include_all_commits=true&count_private=true"/>
-  <img height="180em" src="https://github-readme-stats.vercel.app/api/top-langs/?username=Facu-Basualdo&layout=compact&theme=tokyonight&hide_border=true&langs_count=6"/>
-</p>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Facu-Basualdo/Facu-Basualdo/output/github-contribution-grid-snake-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/Facu-Basualdo/Facu-Basualdo/output/github-contribution-grid-snake.svg" />
+  <img alt="Snake animation" src="https://raw.githubusercontent.com/Facu-Basualdo/Facu-Basualdo/output/github-contribution-grid-snake.svg" width="100%" />
+</picture>
 
 ---
 
