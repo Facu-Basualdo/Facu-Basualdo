@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="https://github.com/Facu-Basualdo"><img src="https://img.shields.io/badge/GitHub-0a0a0f?style=flat&logo=github&logoColor=00FFA3" alt="GitHub"/></a>&nbsp;
-  <a href="https://www.linkedin.com/in/facundo-basualdo/"><img src="https://img.shields.io/badge/LinkedIn-0a0a0f?style=flat&logo=linkedin&logoColor=00FFA3" alt="LinkedIn"/></a>&nbsp;
+  <a href="[https://www.linkedin.com/in/facundo-basualdo/](https://www.linkedin.com/in/facundo-basualdo-alvarez-8461a6282/)"><img src="https://img.shields.io/badge/LinkedIn-0a0a0f?style=flat&logo=linkedin&logoColor=00FFA3" alt="LinkedIn"/></a>&nbsp;
   <a href="mailto:tuemail@gmail.com"><img src="https://img.shields.io/badge/Email-0a0a0f?style=flat&logo=gmail&logoColor=00FFA3" alt="Email"/></a>&nbsp;
   <img src="https://komarev.com/ghpvc/?username=Facu-Basualdo&color=00FFA3&style=flat&label=visitors" alt="Profile views"/>
 </p>
