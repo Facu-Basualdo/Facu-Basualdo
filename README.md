@@ -39,33 +39,40 @@ const facu = {
 
 ### 📌 Proyectos destacados
 
-<a href="https://github.com/Facu-Basualdo/MiFacu">
-  <picture>
-    <img src="./mifacu-logo.png" width="52" alt="MiFacu" align="left" style="margin-right: 12px;" />
-  </picture>
-  <strong>MiFacu</strong>
-  <br/>
-  <sub>Plataforma para gestión académica estudiantil.</sub>
-  <br/>
-  <sub><code>TypeScript</code> <code>Node.js</code> <code>Express</code> <code>React</code> <code>Supabase</code> </sub>
-</a>
-
-<br clear="left"/>
-
-<br/>
-
-<a href="https://github.com/Facu-Basualdo/MiniGames">
-  <picture>
-    <img src="./juegachos.png" width="52" alt="Juegachos" align="left" style="margin-right: 12px;" />
-  </picture>
-  <strong>Juegachos</strong>
-  <br/>
-  <sub>Una colección de minijuegos multijugador y en solitario para el navegador, con ranking global y salas en tiempo real.</sub>
-  <br/>
-  <sub><code>TypeScript</code> <code>Vite</code> <code>Three.js</code> <code>Supabase</code></sub>
-</a>
-
-<br clear="left"/>
+<table>
+  <tr>
+    <td align="center" valign="top" width="70">
+      <a href="https://github.com/Facu-Basualdo/MiFacu">
+        <img src="./mifacu-logo.png" width="52" alt="MiFacu" />
+      </a>
+    </td>
+    <td valign="top">
+      <a href="https://github.com/Facu-Basualdo/MiFacu">
+        <strong>MiFacu</strong>
+        <br/>
+        <sub>Plataforma para gestión académica estudiantil web y mobile.</sub>
+        <br/>
+        <sub><code>TypeScript</code> <code>Node.js</code> <code>Express</code> <code>React</code> <code>Supabase</code> </sub>
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" valign="top" width="70">
+      <a href="https://github.com/Facu-Basualdo/MiniGames">
+        <img src="./juegachos.png" width="52" alt="Juegachos" />
+      </a>
+    </td>
+    <td valign="top">
+      <a href="https://github.com/Facu-Basualdo/MiniGames">
+        <strong>Juegachos</strong>
+        <br/>
+        <sub>Una colección de minijuegos multijugador y en solitario para el navegador, con ranking global y salas en tiempo real.</sub>
+        <br/>
+        <sub><code>TypeScript</code> <code>Vite</code> <code>Three.js</code> <code>Supabase</code></sub>
+      </a>
+    </td>
+  </tr>
+</table>
 
 ---
 
