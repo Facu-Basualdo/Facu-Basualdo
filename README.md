@@ -45,9 +45,9 @@ const facu = {
   </picture>
   <strong>MiFacu</strong>
   <br/>
-  <sub>Sistema educativo completo para gestión académica. Plataforma moderna pensada para mejorar la experiencia de estudiantes y docentes.</sub>
+  <sub>Plataforma para gestión académica estudiantil.</sub>
   <br/>
-  <sub><code>TypeScript</code> <code>Node.js</code> <code>Express</code> <code>React</code></sub>
+  <sub><code>TypeScript</code> <code>Node.js</code> <code>Express</code> <code>React</code> <code>Supabase</code> </sub>
 </a>
 
 <br clear="left"/>
