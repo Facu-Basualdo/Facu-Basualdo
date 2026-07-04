@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./header.svg" width="800" alt="Facu Basualdo - Backend Developer" />
+  <img src="./header.svg" width="800" alt="Facu Basualdo - Full Stack Developer" />
 </p>
 
 <p align="center">
@@ -14,7 +14,7 @@
 ```ts
 const facu = {
     location: "Argentina 🇦🇷",
-    stack: ["Node.js", "Express", "Docker", "SQL", "TypeScript"],
+    stack: ["Node.js", "Express", "Docker", "SQL", "TypeScript", "Three.js", "Supabase"],
     learning: "Architecture & Scalability 🚀",
     motto: "Always learning."
 };
@@ -30,12 +30,14 @@ const facu = {
   <img src="https://img.shields.io/badge/Docker-0a0a0f?style=for-the-badge&logo=docker&logoColor=2496ED" alt="Docker"/>
   <img src="https://img.shields.io/badge/PostgreSQL-0a0a0f?style=for-the-badge&logo=postgresql&logoColor=4169E1" alt="PostgreSQL"/>
   <img src="https://img.shields.io/badge/TypeScript-0a0a0f?style=for-the-badge&logo=typescript&logoColor=3178C6" alt="TypeScript"/>
+  <img src="https://img.shields.io/badge/Three.js-0a0a0f?style=for-the-badge&logo=three.js&logoColor=ffffff" alt="Three.js"/>
+  <img src="https://img.shields.io/badge/Supabase-0a0a0f?style=for-the-badge&logo=supabase&logoColor=3ECF8E" alt="Supabase"/>
   <img src="https://img.shields.io/badge/Git-0a0a0f?style=for-the-badge&logo=git&logoColor=F05032" alt="Git"/>
 </p>
 
 ---
 
-### 📌 Proyecto destacado
+### 📌 Proyectos destacados
 
 <a href="https://github.com/Facu-Basualdo/MiFacu">
   <picture>
@@ -46,6 +48,21 @@ const facu = {
   <sub>Sistema educativo completo para gestión académica. Plataforma moderna pensada para mejorar la experiencia de estudiantes y docentes.</sub>
   <br/>
   <sub><code>TypeScript</code> <code>Node.js</code> <code>Express</code> <code>React</code></sub>
+</a>
+
+<br clear="left"/>
+
+<br/>
+
+<a href="https://github.com/Facu-Basualdo/MiniGames">
+  <picture>
+    <img src="./juegachos.png" width="52" alt="Juegachos" align="left" style="margin-right: 12px;" />
+  </picture>
+  <strong>Juegachos</strong>
+  <br/>
+  <sub>Una colección de minijuegos multijugador y en solitario para el navegador, con ranking global y salas en tiempo real.</sub>
+  <br/>
+  <sub><code>TypeScript</code> <code>Vite</code> <code>Three.js</code> <code>Supabase</code></sub>
 </a>
 
 <br clear="left"/>

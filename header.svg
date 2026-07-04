@@ -61,10 +61,10 @@
   </rect>
 
   <!-- Role -->
-  <text x="400" y="205" font-family="'JetBrains Mono','Fira Code',monospace" font-size="14" fill="#e2e8f0" text-anchor="middle" letter-spacing="5" opacity="0.85">BACKEND DEVELOPER</text>
+  <text x="400" y="205" font-family="'JetBrains Mono','Fira Code',monospace" font-size="14" fill="#e2e8f0" text-anchor="middle" letter-spacing="5" opacity="0.85">FULL STACK DEVELOPER</text>
 
   <!-- Tech -->
-  <text x="400" y="245" font-family="'JetBrains Mono','Fira Code',monospace" font-size="12" fill="#4a5568" text-anchor="middle">Node.js · Express · Docker · SQL · TypeScript</text>
+  <text x="400" y="245" font-family="'JetBrains Mono','Fira Code',monospace" font-size="12" fill="#4a5568" text-anchor="middle">Node.js · Express · Docker · SQL · TypeScript · Three.js · Supabase</text>
 
   <!-- Bottom line -->
   <rect x="0" y="318" width="800" height="2" fill="url(#accent)" opacity="0.15"/>
