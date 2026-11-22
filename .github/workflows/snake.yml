@@ -28,9 +28,10 @@ jobs:
         uses: Platane/snk/svg-only@v3
         with:
           github_user_name: ${{ github.repository_owner }}
+          # Escala de grises, como basualdo.dev: de 0 contribuciones al máximo.
           outputs: |
-            dist/github-contribution-grid-snake.svg
-            dist/github-contribution-grid-snake-dark.svg?palette=github-dark
+            dist/github-contribution-grid-snake.svg?color_snake=#0a0a0a&color_dots=#ededed,#c4c4c4,#8a8a8a,#4a4a4a,#0a0a0a
+            dist/github-contribution-grid-snake-dark.svg?color_snake=#ffffff&color_dots=#161b22,#3a3a3a,#6b6b6b,#a3a3a3,#ededed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           

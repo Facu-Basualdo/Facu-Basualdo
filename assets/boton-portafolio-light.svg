@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="165" height="44" viewBox="0 0 165 44" role="img" aria-label="basualdo.dev"><title>basualdo.dev</title><style>@font-face{font-family:'GM';src:url(data:font/woff2;base64,d09GMgABAAAAAATYAA8AAAAACNAAAASAAAGzdQAAAAAAAAAAAAAAAAAAAAAAAAAAGhYbIBwqBmA/U1RBVEgAbBEICocAhXUBNgIkAxwLGgAEIAWEAAcgGyYHAJ4D7s6iQONSlwzDPKd/z/gDFvH8/+/3v7n2O9/vN8dkdI8imixahwQvI97ohEJjUCKhWiJ98vufnPMHMa0EsRp4i7a+MDJexZDSBXWb6MlEDhc97TRC2v0uHASUSsQBQUjV/wDqnOe7n7ookIFFiw/xdqtsbYokHVDx6D9f4SwSdNg4IpxuQ1IygOD9ypw9zrcl6AAlYkwE4zbxgZwQYFIw02AgAMNmj0AGo9k80VWXghsSbVyrO8g4GFMvvSCA88aQu8BKgrxqihfeuN1bm4vBDdimdvx8H2lHkEEAgZqre9jGRMSowgID7GLwNC+/GgEeHl0x4gfRLDBEqbwHqB8AeqKyByCg0ANeHt0AI3eAOXYMlW1ochCKlalS+yVO1jmOqnkE99W6NQvmTJsKob8eGWgiOrACzIAsg7wGAA1QHRtGsrdzndoltxGrNtPRF02Nbg6+e4d0vFcoOt5ZDL7wkr9/bzn0FvRnLC193rYYvHTex3L5xRv50Pv3CHLjzhVof6obfPfKx1VqYTxRa1+u56Deyt/A5AgR8JLQf/tWxw0R5Vfd3Qwt2/gtZy6AhH0I+uZ9CzoFjvW9r+wyqK1RuXrjjmsWFkGUQLuPWEtpUFVEZ6UoNlhg3Hr4SBBR34JHvaWL1x4hUU+sBw8jQ/Kb6fyUBGI4Uf0Od/hHZvHnG8tMS5XGUmuJTPhlybpMDUsK4eESud05Ko+THBv94qrSxOZcuVadXVBJfHH4b0eR4ONWlF/lJnYPBGk+fuIoIUpNCaVt+KrmyX6BgDX4pKfT7WdGddg9qX93/2++b7CA4EY1yWRRTQRXksbFCjRaLD+ZyaehigQOquTRwWICdsuCEJ7v7/5uf+k9zKju2QWU74mmMXh0VMlJQBV8GjMZy9dqsAJg9kgxN65ZKo1rKuSJ+QVJ7CaVe6eRFJfxI1IY91UmTqeq1b94/sZYqpAdf1QCdsuDFE5qkXSIJRKxU6C35IcEQiou5rKbpTJ2UzFX7FubZNIYaNmiNDGer9XeVeLni4DI8vX0GJypMC4XRCeyk8ioa8bFBcxaHhgfQgsTqoKSU5S0cKxFYayxEKFxLRTPtcl/xzpVIDuUHpWSSQWTicsZhZkyaUJqlCg2QYgLOVIHvOuebZJKAP/uzGpXLk+pth0I/GpsbgTAiwtBvtX8XSNOZtly/psZ9v7CL+WhAoA/gec2IPBvFKPuYViB8CvQ1h0ESSDMrF1ilQ0sWSyKWqBEHHFwaizgHwSdfYwNZN645wyljeErgE+NBbvUMuU7teewB9RmV4A6ZC0oZdiOJHCFLvfRu/FPtrGHRZ4BV5lyDSoVyJOvGgkLA0sEEql8BBIhQoEqzcVVKlMYlesNgWQ1quUrU6kKSSATkNnlqsSho8tTgEJeIweNXpkSdLUIlfQIxUNcxRomV0qUqkbLbg7agyIVAdSajrAvq1FMpxITTTQGBja5dFwYdq7YWoS1xuytSMMhR7yfogCjIdXrllkDrRCf7myxajrFCuiln8Q9dUoZAoPF+kYAAA==) format('woff2')}
+.sube{animation:sube .55s cubic-bezier(.22,1,.36,1) backwards}
+@keyframes sube{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.aparece{animation:aparece .7s cubic-bezier(.22,1,.36,1) backwards}
+@keyframes aparece{from{opacity:0}}
+.linea{animation:linea 1.1s cubic-bezier(.22,1,.36,1) backwards;transform-box:fill-box;transform-origin:left}
+@keyframes linea{from{transform:scaleX(0)}}
+.baja{animation:baja 2.4s cubic-bezier(.22,1,.36,1) backwards;transform-box:fill-box;transform-origin:top}
+@keyframes baja{from{transform:scaleY(0)}}
+.cursor{animation:cursor 1.1s steps(1,end) infinite}
+@keyframes cursor{50%{opacity:0}}
+.ping{animation:ping 1s cubic-bezier(0,0,.2,1) infinite;transform-box:fill-box;transform-origin:center}
+@keyframes ping{75%,100%{transform:scale(2.6);opacity:0}}
+.titila{opacity:0;animation:titila 5s ease-in-out infinite}
+@keyframes titila{0%,100%{opacity:0}50%{opacity:.85}}
+.forma{opacity:0;animation:forma 8s steps(1,end) infinite}
+@keyframes forma{0%{opacity:1}6%,100%{opacity:0}}
+.base{animation:base 8s steps(1,end) infinite}
+@keyframes base{0%{opacity:0}6%,100%{opacity:1}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}.titila,.forma{opacity:0}}
+</style><defs></defs><rect x="0.0" y="0.0" width="165.0" height="44.0" fill="#0a0a0a" /><g transform="translate(20.0 14.0) scale(0.6667)" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0"/><path d="M3.6 9h16.8"/><path d="M3.6 15h16.8"/><path d="M11.5 3a17 17 0 0 0 0 18"/><path d="M12.5 3a17 17 0 0 1 0 18"/></g><text x="44.0" y="27.0" font-family="'GM',ui-monospace,monospace" font-size="14" fill="#ffffff" >basualdo.dev</text></svg>
