@@ -261,9 +261,10 @@ def presentacion() -> str:
                                     (" como maintainer.", GEIST, gris_claro)]),
         ("joystick", col("juegachos"), [("Juegachos es open source: si tenés una idea de juego, ", GEIST, gris_claro),
                                         ("mandá un PR", GEIST_B, blanco), (".", GEIST, gris_claro)]),
-        ("cerebro", "#fbbf24", [("Me interesan la IA aplicada, el tiempo real y los gráficos en el navegador.", GEIST, gris_claro)]),
+        ("", "", [("Disponible para trabajo ", GEIST, gris_claro), ("remoto o presencial", GEIST_B, blanco),
+                  (" · UTC-3.", GEIST, gris_claro)]),
     ]
-    alto = y_div + 34 + 40 * len(filas)
+    alto = y_div + 30 + 34 * len(filas)
     s = Svg(W, alto, "Hola, soy Facu. " + parrafo)
     s.css_extra = ("@keyframes saluda{0%,60%,100%{transform:rotate(0)}10%,30%{transform:rotate(16deg)}20%{transform:rotate(-8deg)}40%{transform:rotate(10deg)}50%{transform:rotate(-4deg)}}"
                    ".saluda{animation:saluda 2.4s ease-in-out .6s 3;transform-box:fill-box;transform-origin:70% 80%}")
@@ -297,11 +298,10 @@ def presentacion() -> str:
     s.add("</g>")
     s.add(f'<path d="M44 {y_div}H{W - 44}" stroke="{borde}" stroke-dasharray="3 5"/>')
     for i, (nombre, color, partes) in enumerate(filas):
-        y = y_div + 34 + i * 40
+        y = y_div + 38 + i * 34
         s.add(f'<g class="entra" style="animation-delay:{0.4 + i * 0.12:.2f}s">')
-        s.add(f'<rect x="44.5" y="{y - 3.5}" width="29" height="29" rx="8" fill="{color}" fill-opacity=".1" stroke="{color}" stroke-opacity=".3"/>')
-        s.add(icono(nombre, 51, y + 3, 16, color))
-        texto_rico(s, 88, y + 16, partes, 14.5)
+        s.add(f'<circle cx="49" cy="{y - 5}" r="3" fill="{apagado}"/>')
+        texto_rico(s, 64, y, partes, 14.5)
         s.add("</g>")
     return s.render()
 
