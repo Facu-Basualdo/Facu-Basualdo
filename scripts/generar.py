@@ -616,6 +616,38 @@ def stack(tema: str) -> str:
     return s.render()
 
 
+# ─── Títulos de sección ─────────────────────────────────────────────────────
+
+SECCIONES = [
+    ("proyectos", "Proyectos", "ls ~/proyectos", ["mifacu", "juegachos", "brillo", "arco"]),
+    ("stack", "Stack", "cat ~/.stack", ["brillo", "arco"]),
+    ("actividad", "Actividad", "git log --since=1.year", ["arco", "mifacu"]),
+]
+
+
+def titulo(clave: str, tema: str) -> str:
+    """Título grande con el comando de consola al lado y una línea con los
+    colores de los proyectos que se desvanece."""
+    _, nombre, comando, colores = next(x for x in SECCIONES if x[0] == clave)
+    c = GH[tema]
+    blanco = "#f0f6fc" if tema == "dark" else "#1f2328"
+    oscuro = tema == "dark"
+    alto = 78
+    s = Svg(W, alto, nombre)
+    paradas = "".join(f'<stop offset="{i * 0.45 / max(len(colores) - 1, 1):.3f}" stop-color="{COLOR[r][0 if oscuro else 1]}"/>'
+                      for i, r in enumerate(colores))
+    s.defs.append(f'<linearGradient id="linea" x1="0" y1="0" x2="1" y2="0">{paradas}'
+                  f'<stop offset=".8" stop-color="{COLOR[colores[-1]][0 if oscuro else 1]}" stop-opacity="0"/></linearGradient>')
+    s.add('<g class="entra">')
+    s.t(0, 50, nombre, 32, GEIST_B, blanco)
+    x = GEIST_B.ancho(nombre, 32) + 18
+    s.t(x, 49, "$", 13, MONO_B, c["user"])
+    s.t(x + MONO.ancho("$ ", 13), 49, comando, 13, MONO, c["muted"])
+    s.add("</g>")
+    s.add(f'<rect class="traza" x="0" y="{alto - 12}" width="{W}" height="2" rx="1" fill="url(#linea)"/>')
+    return s.render()
+
+
 # ─── README ─────────────────────────────────────────────────────────────────
 
 
@@ -646,17 +678,17 @@ def readme() -> str:
 
 <a href="{WEB}">{imagen("encabezado", "git log de Facundo Basualdo: dev full-stack en Resistencia, Chaco. Cofundador de miFACU, creador de Juegachos, autor de Brillo y parte del equipo de Arco.", "100%", temas=False)}</a>
 
-### 📌 Proyectos
+{imagen("titulo-proyectos", "Proyectos", "100%")}
 
 {chr(10).join(tarjetas)}
 
 <sub>También hice: {otros}</sub>
 
-### 🧰 Stack
+{imagen("titulo-stack", "Stack", "100%")}
 
 {imagen("stack", "Stack: " + ", ".join(n for _, n in STACK), "100%")}
 
-### 🐍 Actividad
+{imagen("titulo-actividad", "Actividad", "100%")}
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="{SNAKE}-dark.svg" />
@@ -678,6 +710,9 @@ def main():
     for clave, texto, nombre_icono, _ in BOTONES:
         archivos[f"boton-{clave}"] = boton(texto, nombre_icono)
     archivos["encabezado"] = encabezado()
+    for tema in GH:
+        for clave, *_ in SECCIONES:
+            archivos[f"titulo-{clave}-{tema}"] = titulo(clave, tema)
     for pid, fn in TARJETAS.items():
         archivos[f"proyecto-{pid}"] = fn()
     for nombre, contenido in archivos.items():
