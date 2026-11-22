@@ -266,8 +266,6 @@ def presentacion() -> str:
     ]
     alto = y_div + 30 + 34 * len(filas)
     s = Svg(W, alto, "Hola, soy Facu. " + parrafo)
-    s.css_extra = ("@keyframes saluda{0%,60%,100%{transform:rotate(0)}10%,30%{transform:rotate(16deg)}20%{transform:rotate(-8deg)}40%{transform:rotate(10deg)}50%{transform:rotate(-4deg)}}"
-                   ".saluda{animation:saluda 2.4s ease-in-out .6s 3;transform-box:fill-box;transform-origin:70% 80%}")
     s.defs.append(
         f'<clipPath id="panel"><rect width="{W}" height="{alto}" rx="10"/></clipPath>'
         f'<radialGradient id="azul" cx="1" cy="0" r=".75"><stop offset="0" stop-color="{col("mifacu")}" stop-opacity=".2"/>'
@@ -285,8 +283,6 @@ def presentacion() -> str:
 
     s.add('<g class="entra" style="animation-delay:.05s">')
     s.t(44, 70, "Hola, soy Facu", 32, GEIST_B, blanco)
-    s.t(44 + GEIST_B.ancho("Hola, soy Facu ", 32), 70, "👋", 28,
-        "'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif", blanco, extra='class="saluda"')
     s.add("</g>")
     s.add('<g class="entra" style="animation-delay:.15s">')
     s.add(icono("pin", 44, 84, 14, apagado))
