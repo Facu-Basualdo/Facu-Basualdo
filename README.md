@@ -23,7 +23,7 @@
 
 ### 🧰 Stack
 
-<picture><source media="(prefers-color-scheme: dark)" srcset="./assets/stack-dark.svg" /><img src="./assets/stack-light.svg" alt="Stack: TypeScript, React, Next.js, React Native, Node.js, PostgreSQL, Supabase, Redis, Three.js, socket.io, SwiftUI, C# / .NET, Tailwind, Docker, Claude, Vercel" width="100%" /></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="./assets/stack-dark.svg" /><img src="./assets/stack-light.svg" alt="Stack: TypeScript, React, Next.js, React Native, Node.js, PostgreSQL, Supabase, Redis, Three.js, socket.io, C# / .NET, Tailwind, Docker, Claude, Vercel" width="100%" /></picture>
 
 ### 🐍 Actividad
 

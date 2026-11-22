@@ -75,7 +75,7 @@ OTROS = [
 STACK = [
     ("typescript", "TypeScript"), ("react", "React"), ("nextdotjs", "Next.js"), ("expo", "React Native"),
     ("nodedotjs", "Node.js"), ("postgresql", "PostgreSQL"), ("supabase", "Supabase"), ("redis", "Redis"),
-    ("threedotjs", "Three.js"), ("socketdotio", "socket.io"), ("swift", "SwiftUI"), ("dotnet", "C# / .NET"),
+    ("threedotjs", "Three.js"), ("socketdotio", "socket.io"), ("dotnet", "C# / .NET"),
     ("tailwindcss", "Tailwind"), ("docker", "Docker"), ("claude", "Claude"), ("vercel", "Vercel"),
 ]
 
