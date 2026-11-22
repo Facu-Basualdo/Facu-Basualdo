@@ -59,8 +59,8 @@ NOMBRE_REF = {"mifacu": "miFACU", "juegachos": "juegachos", "brillo": "brillo", 
 
 PROYECTOS = [
     ("mifacu", "https://mifacu.com.ar", "miFACU: plataforma académica en iOS, Android y web"),
-    ("juegachos", "https://github.com/Facu-Basualdo/Juegachos", "Juegachos: 67 minijuegos web open source"),
-    ("brillo", "https://github.com/Facu-Basualdo/Brillo", "Brillo: control de brillo para Windows, en la Microsoft Store"),
+    ("juegachos", "https://www.juegachos.com/", "Juegachos: 67 minijuegos web open source"),
+    ("brillo", "https://apps.microsoft.com/detail/9N9KLJ46MQVD", "Brillo: control de brillo para Windows, en la Microsoft Store"),
     ("arco", "https://www.arcosoftware.com.ar/", "Arco: software de gestión de obras"),
 ]
 
@@ -208,18 +208,147 @@ def flecha(x, y, tam, color, ancho_trazo=2) -> str:
             f'stroke-width="{ancho_trazo}">{FLECHA}</g>')
 
 
-# ─── Encabezado: git log --graph ────────────────────────────────────────────
-
 W = 840
 
+# Íconos de Tabler, en una grilla de 24.
+ICONOS = {
+    "herramienta": ["M7 10h3v-3l-3.5 -3.5a6 6 0 0 1 8 8l6 6a2 2 0 0 1 -3 3l-6 -6a6 6 0 0 1 -8 -8l3.5 3.5"],
+    "joystick": ["M12 5h3.5a5 5 0 0 1 0 10h-5.5l-4.015 4.227a2.3 2.3 0 0 1 -3.923 -2.035l1.634 -8.173a5 5 0 0 1 4.904 -4.019h3.4",
+                 "M14 15l4.07 4.284a2.3 2.3 0 0 0 3.925 -2.023l-1.6 -8.232", "M8 9v2", "M7 10h2", "M14 10h2"],
+    "cerebro": ["M15.5 13a3.5 3.5 0 0 0 -3.5 3.5v1a3.5 3.5 0 0 0 7 0v-1.8", "M8.5 13a3.5 3.5 0 0 1 3.5 3.5v1a3.5 3.5 0 0 1 -7 0v-1.8",
+                "M17.5 16a3.5 3.5 0 0 0 0 -7h-.5", "M19 9.3v-2.8a3.5 3.5 0 0 0 -7 0", "M6.5 16a3.5 3.5 0 0 1 0 -7h.5",
+                "M5 9.3v-2.8a3.5 3.5 0 0 1 7 0v10"],
+    "pin": ["M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0", "M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0"],
+    "mail": ["M3 7a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-10", "M3 7l9 6l9 -6"],
+    "web": ["M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0", "M3.6 9h16.8", "M3.6 15h16.8", "M11.5 3a17 17 0 0 0 0 18", "M12.5 3a17 17 0 0 1 0 18"],
+    "linkedin": ["M8 11v5", "M8 8v.01", "M12 16v-5", "M16 16v-3a2 2 0 1 0 -4 0",
+                 "M3 7a4 4 0 0 1 4 -4h10a4 4 0 0 1 4 4v10a4 4 0 0 1 -4 4h-10a4 4 0 0 1 -4 -4l0 -10"],
+}
 
-def encabezado(tema: str) -> str:
+
+def icono(nombre, x, y, tam, color) -> str:
+    trazos = "".join(f'<path d="{d}"/>' for d in ICONOS[nombre])
+    return (f'<g transform="translate({x:.1f} {y:.1f}) scale({tam / 24:.3f})" fill="none" stroke="{color}" '
+            f'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{trazos}</g>')
+
+
+def texto_rico(s: "Svg", x, y, partes, tam):
+    """Un solo <text> con tramos de distinta letra o color: [(texto, fuente, color)].
+    El navegador encadena los tramos, así los espacios quedan exactos."""
+    tramos = []
+    for texto, fuente, color in partes:
+        s.usado.setdefault(fuente, set()).update(texto)
+        tramos.append(f'<tspan font-family="{fuente.familia}" fill="{color}">{esc(texto)}</tspan>')
+    s.add(f'<text x="{x:.1f}" y="{y:.1f}" font-size="{tam}">{"".join(tramos)}</text>')
+
+
+# ─── Presentación ───────────────────────────────────────────────────────────
+
+
+def presentacion(tema: str) -> str:
     c = GH[tema]
     oscuro = tema == "dark"
-    fila, y0, tam = 34, 84, 13
+    col = lambda ref: COLOR[ref][0 if oscuro else 1]
+    enlace = "#4493f8" if oscuro else "#0969da"
+    parrafo = ("Estudio Ingeniería en Sistemas en la UTN FRRe y me gusta construir cosas que la gente use de verdad: "
+               "apps en las tiendas, juegos que se juegan con amigos y herramientas que resuelven una molestia concreta.")
+    lineas = envolver(parrafo, W - 80, GEIST, 15)
+    y_div = 112 + 24 * len(lineas)
+    filas = [
+        ("herramienta", c["main"], [("Ahora mismo: ", GEIST, c["fg"]), ("miFACU", GEIST_B, col("mifacu")),
+                                    (" como cofundador y ", GEIST, c["fg"]), ("Juegachos", GEIST_B, col("juegachos")),
+                                    (" como maintainer.", GEIST, c["fg"])]),
+        ("joystick", col("juegachos"), [("Juegachos es open source: si tenés una idea de juego, ", GEIST, c["fg"]),
+                                        ("mandá un PR", GEIST_B, enlace), (".", GEIST, c["fg"])]),
+        ("cerebro", c["hash"], [("Me interesan la IA aplicada, el tiempo real y los gráficos en el navegador.", GEIST, c["fg"])]),
+    ]
+    alto = y_div + 30 + 38 * len(filas)
+    s = Svg(W, alto, "Hola, soy Facu. " + parrafo)
+    s.css_extra = ("@keyframes saluda{0%,60%,100%{transform:rotate(0)}10%,30%{transform:rotate(16deg)}20%{transform:rotate(-8deg)}40%{transform:rotate(10deg)}50%{transform:rotate(-4deg)}}"
+                   ".saluda{animation:saluda 2.4s ease-in-out .6s 3;transform-box:fill-box;transform-origin:70% 80%}")
+    # Franja con los colores de los proyectos.
+    paradas = "".join(f'<stop offset="{i / 3:.3f}" stop-color="{col(r)}"/>' for i, r in enumerate(["mifacu", "juegachos", "brillo", "arco"]))
+    s.defs.append(f'<linearGradient id="franja" x1="0" y1="0" x2="1" y2="0">{paradas}</linearGradient>'
+                  f'<clipPath id="panel"><rect width="{W}" height="{alto}" rx="12"/></clipPath>')
+    s.add(f'<rect x=".5" y=".5" width="{W - 1}" height="{alto - 1}" rx="12" fill="{c["panel"]}" stroke="{c["border"]}"/>')
+    s.add(f'<rect class="traza" width="{W}" height="4" fill="url(#franja)" clip-path="url(#panel)"/>')
+
+    s.add('<g class="entra" style="animation-delay:.05s">')
+    s.t(40, 64, "Hola, soy Facu", 28, GEIST_B, c["fg"])
+    s.t(40 + GEIST_B.ancho("Hola, soy Facu ", 28), 64, "👋", 26,
+        "'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif", c["fg"], extra='class="saluda"')
+    s.add("</g>")
+    s.add('<g class="entra" style="animation-delay:.15s">')
+    s.add(icono("pin", 40, 77, 14, c["muted"]))
+    s.t(60, 88, "Resistencia, Chaco · desarrollador full-stack", 12.5, MONO, c["muted"])
+    s.add("</g>")
+    s.add('<g class="entra" style="animation-delay:.25s">')
+    for i, linea in enumerate(lineas):
+        s.t(40, 124 + i * 24, linea, 15, GEIST, c["fg"], extra='fill-opacity=".9"')
+    s.add("</g>")
+    s.add(f'<rect x="40" y="{y_div}" width="{W - 80}" height="1" fill="{c["border"]}"/>')
+    for i, (nombre, color, partes) in enumerate(filas):
+        y = y_div + 30 + i * 38
+        s.add(f'<g class="entra" style="animation-delay:{0.4 + i * 0.12:.2f}s">')
+        s.add(f'<rect x="40" y="{y - 4}" width="28" height="28" rx="8" fill="{color}" fill-opacity=".15"/>')
+        s.add(icono(nombre, 46, y + 2, 16, color))
+        texto_rico(s, 82, y + 15, partes, 14.5)
+        s.add("</g>")
+    return s.render()
+
+
+def boton(texto: str, nombre_icono: str, tema: str) -> str:
+    c = GH[tema]
+    tam, alto = 13, 34
+    ancho = 12 + 16 + 8 + GEIST_B.ancho(texto, tam) + 14
+    s = Svg(ancho, alto, texto)
+    s.add(f'<rect x=".5" y=".5" width="{ancho - 1:.1f}" height="{alto - 1}" rx="8" fill="{c["chip"]}" stroke="{c["border"]}"/>')
+    s.add(icono(nombre_icono, 12, alto / 2 - 8, 16, c["fg"]))
+    s.t(36, alto / 2 + 4.6, texto, tam, GEIST_B, c["fg"])
+    return s.render()
+
+
+BOTONES = [
+    ("email", EMAIL, "mail", f"mailto:{EMAIL}"),
+    ("web", "basualdo.dev", "web", WEB),
+    ("linkedin", "LinkedIn", "linkedin", LINKEDIN),
+]
+
+
+# ─── Encabezado: git log --graph ────────────────────────────────────────────
+
+
+def encabezado() -> str:
+    """Una consola negra (igual en los dos temas de GitHub) con barra de pestañas
+    al estilo de Windows Terminal: pestaña activa, «+» y controles a la derecha."""
+    c = dict(GH["dark"], panel="#0a0a0a")
+    oscuro = True
+    barra = 42
+    fila, y0, tam = 34, 84 + barra, 13
     alto = y0 + fila * (len(COMMITS) - 1) + 70
     s = Svg(W, alto, "git log de Facundo Basualdo: " + "; ".join(f"{k['fecha']}: {k['msg']}" for k in COMMITS))
-    s.add(f'<rect x=".5" y=".5" width="{W - 1}" height="{alto - 1}" rx="12" fill="{c["panel"]}" stroke="{c["border"]}"/>')
+    s.defs.append(f'<clipPath id="ventana"><rect width="{W}" height="{alto}" rx="10"/></clipPath>')
+    s.add(f'<g clip-path="url(#ventana)"><rect width="{W}" height="{alto}" fill="{c["panel"]}"/>'
+          f'<rect width="{W}" height="{barra}" fill="#1b1b1f"/>')
+    # Pestaña activa, unida al fondo de la consola.
+    tx, tw = 10, 236
+    s.add(f'<path d="M{tx} {barra} V16 a8 8 0 0 1 8 -8 H{tx + tw - 8} a8 8 0 0 1 8 8 V{barra} Z" fill="{c["panel"]}"/>')
+    s.add(f'<rect x="{tx + 14}" y="17" width="18" height="15" rx="3" fill="none" stroke="#9aa0a6" stroke-width="1.3"/>'
+          f'<path d="M{tx + 18} 22 l3 2.5 l-3 2.5 M{tx + 23} 28 h4" fill="none" stroke="#9aa0a6" stroke-width="1.3" stroke-linecap="round"/>')
+    s.t(tx + 42, 29, "facu@basualdo: ~", 12, MONO, "#d4d4d8")
+    s.add(f'<path d="M{tx + tw - 22} 20 l7 7 M{tx + tw - 15} 20 l-7 7" stroke="#8b8b93" stroke-width="1.3" stroke-linecap="round"/>')
+    # «+» y «⌄» para abrir pestañas.
+    px = tx + tw + 18
+    s.add(f'<path d="M{px} 19 v10 M{px - 5} 24 h10" stroke="#8b8b93" stroke-width="1.4" stroke-linecap="round"/>'
+          f'<path d="M{px + 18} 22 l4 4 l4 -4" fill="none" stroke="#8b8b93" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>')
+    # Minimizar, maximizar y cerrar.
+    cx = W - 26
+    s.add(f'<g stroke="#a1a1aa" stroke-width="1.2" fill="none" stroke-linecap="round">'
+          f'<path d="M{cx - 5} 19 l10 10 M{cx + 5} 19 l-10 10"/>'
+          f'<rect x="{cx - 51}" y="19" width="10" height="10" rx="1.5"/>'
+          f'<path d="M{cx - 97} 24 h10"/></g>')
+    s.add("</g>")
+    s.add(f'<rect x=".5" y=".5" width="{W - 1}" height="{alto - 1}" rx="10" fill="none" stroke="#2a2a30"/>')
 
     def prompt(y, comando, retraso, cursor=False):
         x = 28
@@ -234,7 +363,7 @@ def encabezado(tema: str) -> str:
             s.add(f'<rect class="cursor" x="{x + 2:.1f}" y="{y - 11}" width="8" height="15" fill="{c["fg"]}"/>')
         s.add("</g>")
 
-    prompt(40, "git log --graph --oneline --since=2022", 0.1)
+    prompt(40 + barra, "git log --graph --oneline --since=2022", 0.1)
 
     # Grafo: rieles por rama y curvas donde nace cada una.
     lx = lambda lane: 38 + lane * 20
@@ -499,16 +628,14 @@ def readme() -> str:
             f'  <a href="{href}">{imagen(f"proyecto-{pid}", alt, "49%", temas=False)}</a>'
             for pid, href, alt in PROYECTOS[i:i + 2]) + "\n</p>")
     otros = " · ".join(f"[{n}]({u})" for n, u in OTROS)
-    return f"""<a href="{WEB}">{imagen("encabezado", "git log de Facundo Basualdo: dev full-stack en Resistencia, Chaco. Cofundador de miFACU, creador de Juegachos, autor de Brillo y parte del equipo de Arco.", "100%")}</a>
+    botones = "\n".join(f'  <a href="{href}">{imagen(f"boton-{clave}", texto, "auto")}</a>' for clave, texto, _, href in BOTONES)
+    return f"""{imagen("presentacion", "Hola, soy Facu. Estudio Ingeniería en Sistemas en la UTN FRRe y me gusta construir cosas que la gente use de verdad. Ahora mismo: miFACU como cofundador y Juegachos como maintainer.", "100%")}
 
-### Hola, soy Facu 👋
+<p>
+{botones}
+</p>
 
-Estudio Ingeniería en Sistemas en la UTN FRRe y me gusta construir cosas que la gente use de verdad: apps en las tiendas, juegos que se juegan con amigos y herramientas que resuelven una molestia concreta.
-
-- 🛠️ Ahora mismo: **miFACU** como cofundador y **Juegachos** como maintainer.
-- 🎮 Juegachos es open source: si tenés una idea de juego, [mandá un PR]({PROYECTOS[1][1]}).
-- 🧠 Me interesan la IA aplicada, el tiempo real y los gráficos en el navegador.
-- 📫 [{EMAIL}](mailto:{EMAIL}) · [basualdo.dev]({WEB}) · [LinkedIn]({LINKEDIN})
+<a href="{WEB}">{imagen("encabezado", "git log de Facundo Basualdo: dev full-stack en Resistencia, Chaco. Cofundador de miFACU, creador de Juegachos, autor de Brillo y parte del equipo de Arco.", "100%", temas=False)}</a>
 
 ### 📌 Proyectos
 
@@ -537,8 +664,11 @@ def main():
         viejo.unlink()
     archivos = {}
     for tema in GH:
-        archivos[f"encabezado-{tema}"] = encabezado(tema)
+        archivos[f"presentacion-{tema}"] = presentacion(tema)
+        for clave, texto, nombre_icono, _ in BOTONES:
+            archivos[f"boton-{clave}-{tema}"] = boton(texto, nombre_icono, tema)
         archivos[f"stack-{tema}"] = stack(tema)
+    archivos["encabezado"] = encabezado()
     for pid, fn in TARJETAS.items():
         archivos[f"proyecto-{pid}"] = fn()
     for nombre, contenido in archivos.items():
