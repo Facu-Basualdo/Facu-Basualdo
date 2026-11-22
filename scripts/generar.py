@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
-Genera el README del perfil y sus SVG con el mismo estilo que basualdo.dev:
-negro puro, blanco como único acento, esquinas rectas, Geist Pixel para lo que
-tiene que llamar la atención y Geist Mono para todo lo demás.
+Genera el README del perfil de GitHub y sus SVG.
+
+El perfil tiene identidad propia, distinta de basualdo.dev:
+- el encabezado cuenta la trayectoria como un `git log --graph`, con los
+  proyectos en curso como ramas abiertas y los colores de GitHub;
+- cada proyecto destacado lleva los colores, la tipografía y algún gesto de su
+  propio producto.
 
 GitHub no deja cargar fuentes ni CSS externos en un README, así que cada SVG
-lleva incrustada la parte de las fuentes que usa (recortada a sus caracteres) y
-sus animaciones en CSS/SMIL. Cada imagen sale en versión oscura y clara.
+lleva incrustado el recorte de las fuentes que usa y sus animaciones.
 
-    pip install fonttools brotli
+    pip install fonttools brotli pillow
     python scripts/generar.py
-
-Para actualizar el perfil se tocan los datos de abajo (copiados de
-Portafolio/src/data/perfil.ts) y se vuelve a correr el script.
 """
 from __future__ import annotations
 
@@ -20,6 +20,7 @@ import base64
 import html
 import io
 import random
+import re
 from pathlib import Path
 
 from fontTools import subset
@@ -28,260 +29,99 @@ from fontTools.varLib import instancer
 
 RAIZ = Path(__file__).resolve().parent.parent
 ASSETS = RAIZ / "assets"
-FUENTES = Path(__file__).resolve().parent / "fuentes"
+AQUI = Path(__file__).resolve().parent
 
 # ─── Contenido ──────────────────────────────────────────────────────────────
 
-PERFIL = {
-    "nombre": ["Facundo", "Basualdo"],
-    "roles": ["full-stack", "de producto", "de IA aplicada", "de tiempo real"],
-    "ubicacion": "Resistencia, Chaco, Argentina",
-    "resumen": (
-        "Estudio Ingeniería en Sistemas en la UTN FRRE y construyo productos que están en "
-        "producción: una plataforma académica en Google Play y web, una plataforma open source "
-        "de minijuegos con aportes de la comunidad y una utilidad para Windows en la Microsoft Store."
-    ),
-    "disponibilidad": "Disponible para trabajo remoto o presencial en Resistencia · UTC-3",
-    "email": "facundo@basualdo.dev",
-    "web": "https://basualdo.dev",
-    "linkedin": "https://www.linkedin.com/in/facu-basualdo/",
-    "cv": "https://basualdo.dev/cv-facundo-basualdo.pdf",
+EMAIL = "facundo@basualdo.dev"
+WEB = "https://basualdo.dev"
+LINKEDIN = "https://www.linkedin.com/in/facu-basualdo/"
+GITHUB = "https://github.com/Facu-Basualdo"
+
+# Colores de cada proyecto para el log: (tema oscuro, tema claro).
+COLOR = {
+    "mifacu": ("#7aa7ff", "#2552e2"),
+    "juegachos": ("#e955ee", "#b80fbb"),
+    "brillo": ("#4aa8ff", "#0361bd"),
+    "arco": ("#9fbf7a", "#324521"),
 }
 
-CIFRAS = [
-    ("~230k", "líneas en miFACU"),
-    ("67", "juegos en Juegachos"),
-    ("8", "colaboradores open source"),
-    ("3", "plataformas en producción"),
+# De lo más nuevo a lo más viejo. lane 1 y 2 son ramas que siguen abiertas.
+COMMITS = [
+    {"hash": "17b64f9", "ref": "HEAD", "msg": "Facundo Basualdo · dev full-stack en Resistencia, Chaco", "fecha": "hoy", "lane": 0},
+    {"hash": "c4e19a2", "ref": "brillo", "msg": "publiqué Brillo en la Microsoft Store", "fecha": "nov 2026", "lane": 0},
+    {"hash": "8b3f0d7", "ref": "juegachos", "msg": "lancé Juegachos: 67 minijuegos open source", "fecha": "jul 2026", "lane": 2},
+    {"hash": "5a92e6c", "ref": "arco", "msg": "Arco: gestión de obras con un equipo de 4", "fecha": "may 2026", "lane": 0},
+    {"hash": "2f7d4b1", "ref": "mifacu", "msg": "cofundé miFACU: iOS, Android y web", "fecha": "ene 2026", "lane": 1},
+    {"hash": "0e1c8a3", "ref": "utn", "msg": "arranqué Ing. en Sistemas en la UTN FRRe", "fecha": "2022", "lane": 0},
 ]
+NOMBRE_REF = {"mifacu": "miFACU", "juegachos": "juegachos", "brillo": "brillo", "arco": "arco", "utn": "tag: utn"}
 
-# destino: a dónde lleva el clic en la tarjeta (el repo si es público).
 PROYECTOS = [
-    {
-        "id": "mifacu",
-        "nombre": "miFACU",
-        "bajada": "Plataforma académica en iOS, Android y web",
-        "descripcion": "Gestor académico para universitarios: materias, correlativas, horarios, finales, apuntes e IA de estudio, con panel de administración y modelo freemium.",
-        "destacados": [
-            "Monorepo de 4 plataformas: API Node/Express, web Next.js 16, React Native y app iOS nativa en SwiftUI.",
-            "IA con cadenas de fallback entre Gemini, Claude, DeepSeek y OpenAI según costo, latencia o calidad.",
-        ],
-        "stack": ["Next.js", "React Native", "SwiftUI", "Node.js", "PostgreSQL", "Redis", "Vercel AI SDK"],
-        "rol": "Cofundador · full-stack",
-        "periodo": "2026 – hoy",
-        "enlaces": ["mifacu.com.ar", "App Store", "Google Play"],
-        "destino": "https://mifacu.com.ar",
-    },
-    {
-        "id": "juegachos",
-        "nombre": "Juegachos",
-        "bajada": "67 minijuegos web, open source",
-        "descripcion": "Colección de minijuegos jugables en el navegador con ranking global, salas multijugador de hasta 8 personas y aportes de la comunidad vía Pull Request.",
-        "destacados": [
-            "Arquitectura de plugins auto-descubiertos: sumar un juego no toca código compartido.",
-            "Salas host-autoritativas sobre Supabase Realtime y 17 juegos 3D con Three.js y Rapier.",
-        ],
-        "stack": ["TypeScript", "Three.js", "Supabase", "socket.io", "Vite", "Playwright"],
-        "rol": "Creador y maintainer",
-        "periodo": "2026 – hoy",
-        "enlaces": ["juegachos.com", "Código"],
-        "destino": "https://github.com/Facu-Basualdo/Juegachos",
-    },
-    {
-        "id": "brillo",
-        "nombre": "Brillo",
-        "bajada": "Control de brillo para Windows, en la Microsoft Store",
-        "descripcion": "Cambia el brillo de cada pantalla desde un icono junto al reloj o con un atajo global, sin tocar los botones del monitor.",
-        "destacados": [
-            "Monitores externos por DDC/CI (dxva2 vía P/Invoke) y la laptop por WMI.",
-            "Paquete MSIX para la Store e instalador sin permisos de administrador.",
-        ],
-        "stack": ["C#", "WinForms", "Win32", "DDC/CI", "MSIX"],
-        "rol": "Proyecto propio",
-        "periodo": "Nov 2026",
-        "enlaces": ["Microsoft Store", "Código"],
-        "destino": "https://github.com/Facu-Basualdo/Brillo",
-    },
-    {
-        "id": "arco",
-        "nombre": "Arco",
-        "bajada": "Software de gestión de obras",
-        "descripcion": "Proyectos, actividades con avance ponderado, planos con observaciones, presupuestos, certificados e informes. Toda la seguridad está en Row Level Security.",
-        "destacados": [
-            "Módulo de planos y documentos con carpetas, versiones y visor PDF.",
-            "Importación de presupuestos y certificados desde Excel.",
-        ],
-        "stack": ["Next.js", "Supabase", "HeroUI", "RLS", "exceljs"],
-        "rol": "Full-stack · equipo de 4",
-        "periodo": "May – Ago 2026",
-        "enlaces": ["arcosoftware.com.ar"],
-        "destino": "https://www.arcosoftware.com.ar/",
-    },
-    {
-        "id": "vitrina",
-        "nombre": "Vitrina",
-        "bajada": "Tienda online con catálogo genérico",
-        "descripcion": "Sirve igual para ropa que para electrónica: filtros facetados, variantes con stock propio y pedidos por WhatsApp con el total calculado en la base.",
-        "destacados": [
-            "Promociones, combos y cupones evaluados en PostgreSQL, sin acumularse.",
-            "Punto de venta de escritorio en Python + PySide6 sobre la misma base.",
-        ],
-        "stack": ["Next.js", "HeroUI", "Supabase", "TipTap", "Python"],
-        "rol": "Proyecto propio",
-        "periodo": "2026",
-        "enlaces": ["vitrina.basualdo.dev", "Código"],
-        "destino": "https://github.com/Facu-Basualdo/CatalogoTienda",
-    },
-    {
-        "id": "el-precioso",
-        "nombre": "El Precioso",
-        "bajada": "Tienda online para un emprendimiento local",
-        "descripcion": "Catálogo pensado para el celular, carrito que termina en un pedido por WhatsApp y un panel para que la dueña maneje todo desde el teléfono.",
-        "destacados": [
-            "Editor de fotos que quita el fondo en el navegador con un modelo ONNX.",
-            "Cotización, promociones y cupones calculados en PostgreSQL, con RLS.",
-        ],
-        "stack": ["Next.js", "Supabase", "HeroUI", "RLS", "ONNX"],
-        "rol": "Full-stack · para un emprendimiento",
-        "periodo": "May – Nov 2026",
-        "enlaces": ["Código"],
-        "destino": "https://github.com/Facu-Basualdo/ElPreciosoTiendaWeb",
-    },
-    {
-        "id": "gestor-de-estudios",
-        "nombre": "Gestor de Estudios",
-        "bajada": "Tutor de estudio con IA",
-        "descripcion": "Vault de Obsidian que arma, conduce y registra sesiones de estudio con Claude Code como tutor, más una web de flashcards y cuestionarios generados desde las notas.",
-        "destacados": [
-            "Priorización por peso × dominio × urgencia.",
-            "Recuperación activa y repetición espaciada.",
-        ],
-        "stack": ["Next.js", "Claude Code", "Gemini", "Obsidian"],
-        "rol": "Proyecto propio",
-        "periodo": "2026",
-        "enlaces": ["tutor.basualdo.dev", "Código"],
-        "destino": "https://github.com/Facu-Basualdo/GestorDeEstudios",
-    },
-    {
-        "id": "mods-minecraft",
-        "nombre": "Mods de Minecraft",
-        "bajada": "Cuatro mods de Fabric que se juegan juntos",
-        "descripcion": "Bloodmoon & Bosses sube el nivel de los mobs, Hero's Forge te deja comprar estadísticas con experiencia, Mythic Loot suelta equipo con rareza y Soul Link comparte inventario y hambre entre jugadores.",
-        "destacados": [],
-        "stack": ["Java", "Fabric", "Minecraft 26.3"],
-        "rol": "Proyecto propio",
-        "periodo": "2026",
-        "enlaces": ["Soul Link", "Hero's Forge", "Mythic Loot", "Bloodmoon"],
-        "destino": "https://github.com/search?q=user%3AFacu-Basualdo+topic%3Afabric-mod&type=repositories",
-    },
+    ("mifacu", "https://mifacu.com.ar", "miFACU: plataforma académica en iOS, Android y web"),
+    ("juegachos", "https://github.com/Facu-Basualdo/Juegachos", "Juegachos: 67 minijuegos web open source"),
+    ("brillo", "https://github.com/Facu-Basualdo/Brillo", "Brillo: control de brillo para Windows, en la Microsoft Store"),
+    ("arco", "https://www.arcosoftware.com.ar/", "Arco: software de gestión de obras"),
 ]
 
-EXPERIENCIA = [
-    ("Jul 2026", "Creador y maintainer", "Juegachos · open source · jul 2026 – hoy", [
-        "314 de 425 commits y revisión de los aportes de 8 colaboradores.",
-        "Guía de contribución y documentación por juego para que cualquiera pueda sumar el suyo.",
-    ]),
-    ("May 2026", "Desarrollador full-stack", "Arco · equipo de 4 · may – ago 2026", [
-        "Aplicación de gestión de obras con ~52.000 líneas y 84 migraciones SQL, con seguridad íntegramente en RLS.",
-        "Reduje el tiempo de carga del detalle de proyecto paralelizando queries y agregando prefetch.",
-    ]),
-    ("Ene 2026", "Cofundador y desarrollador full-stack", "miFACU · remoto · ene 2026 – hoy", [
-        "Plataforma publicada en Google Play y web: 642 de los 1.458 commits, junto a un socio.",
-        "Diseñé la arquitectura de IA, con salidas estructuradas validadas por schema y reparación de JSON sin volver a llamar al modelo.",
-        "Eliminé el throttling de analytics con un semáforo de concurrencia, backoff con jitter y caché en Redis.",
-    ]),
-    ("2024", "Soporte IT y asistencia técnica", "Freelance · Resistencia · 2024 – hoy", [
-        "Diagnóstico y resolución de incidencias de hardware y software, presencial y remoto.",
-        "Capacitación de usuarios sin formación técnica.",
-    ]),
-    ("2022", "Ingeniería en Sistemas de Información", "UTN · Facultad Regional Resistencia · 2022 – hoy", [
-        "Tercer año en curso.",
-    ]),
+OTROS = [
+    ("Vitrina", "https://github.com/Facu-Basualdo/CatalogoTienda"),
+    ("El Precioso", "https://github.com/Facu-Basualdo/ElPreciosoTiendaWeb"),
+    ("Gestor de Estudios", "https://github.com/Facu-Basualdo/GestorDeEstudios"),
+    ("mods de Minecraft", "https://github.com/search?q=user%3AFacu-Basualdo+topic%3Afabric-mod&type=repositories"),
 ]
 
+# (slug de Simple Icons, nombre)
 STACK = [
-    ("Frontend", ["React 19", "Next.js 16", "React Native + Expo", "Tailwind CSS v4", "HeroUI", "TanStack Query"]),
-    ("Backend y datos", ["Node.js", "Express", "PostgreSQL", "Supabase", "Redis", "TypeORM", "Zod", "Docker"]),
-    ("IA y LLMs", ["Vercel AI SDK", "Gemini", "Claude", "DeepSeek", "OpenAI", "RAG", "Salidas estructuradas"]),
-    ("Tiempo real y gráficos", ["Three.js", "Rapier", "Canvas 2D", "socket.io", "Supabase Realtime"]),
-    ("Herramientas", ["Git y GitHub", "Vercel", "Railway", "PostHog", "RevenueCat", "Playwright"]),
+    ("typescript", "TypeScript"), ("react", "React"), ("nextdotjs", "Next.js"), ("expo", "React Native"),
+    ("nodedotjs", "Node.js"), ("postgresql", "PostgreSQL"), ("supabase", "Supabase"), ("redis", "Redis"),
+    ("threedotjs", "Three.js"), ("socketdotio", "socket.io"), ("swift", "SwiftUI"), ("dotnet", "C# / .NET"),
+    ("tailwindcss", "Tailwind"), ("docker", "Docker"), ("claude", "Claude"), ("vercel", "Vercel"),
 ]
 
-SECCIONES = {
-    "proyectos": ("01", "Proyectos", "Productos en producción, proyectos open source y experimentos. Los números salen de cada repositorio."),
-    "experiencia": ("02", "Experiencia", "Dónde trabajé, qué construí y con quién."),
-    "stack": ("03", "Stack", "Las herramientas que uso todos los días."),
-    "actividad": ("04", "Actividad", "Mis contribuciones del último año."),
-    "contacto": ("05", "Contacto", f"¿Tenés un proyecto o una búsqueda abierta? Escribime y te respondo. {PERFIL['disponibilidad']}."),
+# ─── Colores de GitHub (Primer) ─────────────────────────────────────────────
+
+GH = {
+    "dark": {"panel": "#0d1117", "border": "#30363d", "fg": "#e6edf3", "muted": "#7d8590", "hash": "#d29922",
+             "user": "#3fb950", "path": "#58a6ff", "head": "#39c5cf", "main": "#3fb950", "lane": "#484f58",
+             "chip": "#161b22"},
+    "light": {"panel": "#f6f8fa", "border": "#d0d7de", "fg": "#1f2328", "muted": "#656d76", "hash": "#9a6700",
+              "user": "#1a7f37", "path": "#0969da", "head": "#1b7c83", "main": "#1a7f37", "lane": "#afb8c1",
+              "chip": "#ffffff"},
 }
 
-# ─── Tema ───────────────────────────────────────────────────────────────────
+FLECHA = '<path d="M17 7l-10 10M8 7l9 0l0 9" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'
 
-TEMAS = {
-    "dark": {"bg": "#000000", "fg": "#ededed", "muted": "#8a8a8a", "border": "#1f1f1f",
-             "borde_boton": "#2e2e2e", "punto": 0.09},
-    "light": {"bg": "#ffffff", "fg": "#0a0a0a", "muted": "#6b6b6b", "border": "#e5e5e5",
-              "borde_boton": "#d4d4d4", "punto": 0.12},
-}
-
-# Íconos de Tabler (los mismos que usa el portafolio), en una grilla de 24.
-ICONOS = {
-    "flecha": ["M17 7l-10 10", "M8 7l9 0l0 9"],
-    "linkedin": ["M8 11v5", "M8 8v.01", "M12 16v-5", "M16 16v-3a2 2 0 1 0 -4 0",
-                 "M3 7a4 4 0 0 1 4 -4h10a4 4 0 0 1 4 4v10a4 4 0 0 1 -4 4h-10a4 4 0 0 1 -4 -4l0 -10"],
-    "cv": ["M14 3v4a1 1 0 0 0 1 1h4", "M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2",
-           "M12 17v-6", "M9.5 14.5l2.5 2.5l2.5 -2.5"],
-    "mail": ["M3 7a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-10", "M3 7l9 6l9 -6"],
-    "web": ["M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0", "M3.6 9h16.8", "M3.6 15h16.8",
-            "M11.5 3a17 17 0 0 0 0 18", "M12.5 3a17 17 0 0 1 0 18"],
-}
-
-# Signos del efecto de decodificación (los mismos que TextoDecodificado).
-SIGNOS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#%&*+=/<>_"
-
-ANIMACIONES = """
-.sube{animation:sube .55s cubic-bezier(.22,1,.36,1) backwards}
-@keyframes sube{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-.aparece{animation:aparece .7s cubic-bezier(.22,1,.36,1) backwards}
-@keyframes aparece{from{opacity:0}}
-.linea{animation:linea 1.1s cubic-bezier(.22,1,.36,1) backwards;transform-box:fill-box;transform-origin:left}
-@keyframes linea{from{transform:scaleX(0)}}
-.baja{animation:baja 2.4s cubic-bezier(.22,1,.36,1) backwards;transform-box:fill-box;transform-origin:top}
-@keyframes baja{from{transform:scaleY(0)}}
-.cursor{animation:cursor 1.1s steps(1,end) infinite}
-@keyframes cursor{50%{opacity:0}}
-.ping{animation:ping 1s cubic-bezier(0,0,.2,1) infinite;transform-box:fill-box;transform-origin:center}
-@keyframes ping{75%,100%{transform:scale(2.6);opacity:0}}
-.titila{opacity:0;animation:titila 5s ease-in-out infinite}
-@keyframes titila{0%,100%{opacity:0}50%{opacity:.85}}
-.forma{opacity:0;animation:forma 8s steps(1,end) infinite}
-@keyframes forma{0%{opacity:1}6%,100%{opacity:0}}
-.base{animation:base 8s steps(1,end) infinite}
-@keyframes base{0%{opacity:0}6%,100%{opacity:1}}
-@media (prefers-reduced-motion:reduce){*{animation:none!important}.titila,.forma{opacity:0}}
+ANIM_COMUN = """
+@keyframes entra{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes parpadeo{50%{opacity:0}}
+@keyframes titila{0%,100%{opacity:.15}50%{opacity:1}}
+@keyframes gira{to{transform:rotate(360deg)}}
+@keyframes traza{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+.entra{animation:entra .35s ease-out backwards}
+.cursor{animation:parpadeo 1s steps(1,end) infinite}
+.titila{animation:titila 3s ease-in-out infinite}
+.gira{animation:gira 24s linear infinite;transform-box:fill-box;transform-origin:center}
+.traza{stroke-dasharray:1;animation:traza 1.2s ease-out backwards}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
 """
 
 # ─── Fuentes ────────────────────────────────────────────────────────────────
 
 
 class Fuente:
-    """Una instancia estática de una fuente variable, lista para medir y recortar."""
-
-    def __init__(self, archivo: str, ejes: dict, familia: str):
-        variable = TTFont(FUENTES / archivo)
-        self.font = instancer.instantiateVariableFont(variable, ejes)
-        self.font.flavor = None
-        self.familia = familia
-        self.cmap = self.font.getBestCmap()
-        self.hmtx = self.font["hmtx"]
-        self.upm = self.font["head"].unitsPerEm
-
-    def avance(self, c: str, tam: float) -> float:
-        glifo = self.cmap.get(ord(c), self.cmap[32])
-        return self.hmtx[glifo][0] * tam / self.upm
+    def __init__(self, archivo: str, familia: str, ejes: dict | None = None):
+        font = TTFont(AQUI / "fuentes" / archivo)
+        if ejes and "fvar" in font:
+            font = instancer.instantiateVariableFont(font, ejes)
+        font.flavor = None
+        self.font, self.familia = font, familia
+        self.cmap = font.getBestCmap()
+        self.hmtx = font["hmtx"]
+        self.upm = font["head"].unitsPerEm
 
     def ancho(self, texto: str, tam: float) -> float:
-        return sum(self.avance(c, tam) for c in texto)
+        return sum(self.hmtx[self.cmap.get(ord(c), self.cmap[32])][0] for c in texto) * tam / self.upm
 
     def css(self, texto: str) -> str:
         buf = io.BytesIO()
@@ -300,508 +140,395 @@ class Fuente:
         return f"@font-face{{font-family:'{self.familia}';src:url(data:font/woff2;base64,{datos}) format('woff2')}}"
 
 
-MONO = Fuente("GeistMono-latin.woff2", {"wght": 400}, "GM")
-PIXEL = Fuente("GeistPixel-latin.woff2", {"ELSH": 0}, "GP")
-# Otras formas del píxel (eje ELSH): las letras del nombre las alternan de a ratos.
-FORMAS = [Fuente("GeistPixel-latin.woff2", {"ELSH": e}, f"GP{e}") for e in (50, 100)]
-
-# ─── Lienzo SVG ─────────────────────────────────────────────────────────────
+MONO = Fuente("GeistMono-latin.woff2", "GMono", {"wght": 400})
+MONO_B = Fuente("GeistMono-latin.woff2", "GMonoB", {"wght": 600})
+GEIST = Fuente("Geist.woff2", "Geist", {"wght": 400})
+GEIST_B = Fuente("Geist.woff2", "GeistB", {"wght": 700})
+ARCHIVO = Fuente("Archivo-BlackItalic.woff2", "ArchivoBlack")
+INTER = Fuente("Inter.woff2", "Inter", {"wght": 400})
+INTER_B = Fuente("Inter.woff2", "InterB", {"wght": 700})
+# Brillo es una app de Windows: usa la letra del sistema, sin incrustar.
+SEGOE = "'Segoe UI Variable Display','Segoe UI',system-ui,-apple-system,sans-serif"
 
 
 def esc(texto: str) -> str:
     return html.escape(texto, quote=True)
 
 
-class Lienzo:
-    def __init__(self, ancho: int, tema: str, titulo: str):
-        self.ancho = ancho
-        self.t = TEMAS[tema]
-        self.titulo = titulo
+def png(nombre: str) -> str:
+    return "data:image/png;base64," + base64.b64encode((AQUI / "logos" / f"{nombre}.png").read_bytes()).decode()
+
+
+class Svg:
+    def __init__(self, ancho: float, alto: float, titulo: str):
+        self.ancho, self.alto, self.titulo = ancho, alto, titulo
         self.defs: list[str] = []
         self.partes: list[str] = []
         self.usado: dict[Fuente, set[str]] = {}
+        self.css_extra = ""
 
-    def _usa(self, fuente: Fuente, texto: str):
-        self.usado.setdefault(fuente, set()).update(texto)
-
-    def color(self, nombre: str) -> str:
-        return self.t.get(nombre, nombre)
-
-    def texto(self, x, y, texto, tam, fuente=MONO, color="fg", ancla="start", opacidad=None,
-              clase=None, estilo=None, extra=""):
-        self._usa(fuente, texto)
-        attrs = [f'x="{x:.1f}"', f'y="{y:.1f}"', f"font-family=\"'{fuente.familia}',ui-monospace,monospace\"",
-                 f'font-size="{tam}"', f'fill="{self.color(color)}"']
-        if ancla != "start":
-            attrs.append(f'text-anchor="{ancla}"')
-        if opacidad is not None:
-            attrs.append(f'fill-opacity="{opacidad}"')
-        if clase:
-            attrs.append(f'class="{clase}"')
-        if estilo:
-            attrs.append(f'style="{estilo}"')
-        self.partes.append(f'<text {" ".join(attrs)} {extra}>{esc(texto)}</text>')
-
-    def rect(self, x, y, w, h, color="border", extra=""):
-        self.partes.append(f'<rect x="{x:.1f}" y="{y:.1f}" width="{w:.1f}" height="{h:.1f}" fill="{self.color(color)}" {extra}/>')
-
-    def icono(self, nombre, x, y, tam, color="fg", extra=""):
-        escala = tam / 24
-        trazos = "".join(f'<path d="{d}"/>' for d in ICONOS[nombre])
+    def t(self, x, y, texto, tam, fuente: Fuente | str, color, ancla="start", extra=""):
+        if isinstance(fuente, Fuente):
+            self.usado.setdefault(fuente, set()).update(texto)
+            familia = f"'{fuente.familia}'"
+        else:
+            familia = fuente
+        a = f' text-anchor="{ancla}"' if ancla != "start" else ""
         self.partes.append(
-            f'<g transform="translate({x:.1f} {y:.1f}) scale({escala:.4f})" fill="none" stroke="{self.color(color)}" '
-            f'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" {extra}>{trazos}</g>'
+            f'<text x="{x:.1f}" y="{y:.1f}" font-family="{esc(familia)}" font-size="{tam}" fill="{color}"{a} {extra}>{esc(texto)}</text>'
         )
 
-    def crudo(self, svg: str):
+    def add(self, svg: str):
         self.partes.append(svg)
 
-    def svg(self, alto: float, fondo=True, borde=True) -> str:
-        css = "".join(f.css("".join(sorted(chars))) for f, chars in self.usado.items())
-        cuerpo = []
-        if fondo:
-            cuerpo.append(f'<rect width="100%" height="100%" fill="{self.t["bg"]}"/>')
-        cuerpo += self.partes
-        if borde:
-            cuerpo.append(f'<rect x=".5" y=".5" width="{self.ancho - 1}" height="{alto - 1:.1f}" fill="none" stroke="{self.t["border"]}"/>')
+    def render(self) -> str:
+        css = "".join(f.css("".join(sorted(c))) for f, c in self.usado.items())
         return (
-            f'<svg xmlns="http://www.w3.org/2000/svg" width="{self.ancho}" height="{alto:.0f}" '
-            f'viewBox="0 0 {self.ancho} {alto:.0f}" role="img" aria-label="{esc(self.titulo)}">'
-            f"<title>{esc(self.titulo)}</title>"
-            f"<style>{css}{ANIMACIONES}</style>"
-            f'<defs>{"".join(self.defs)}</defs>'
-            f'{"".join(cuerpo)}</svg>'
+            f'<svg xmlns="http://www.w3.org/2000/svg" width="{self.ancho:.0f}" height="{self.alto:.0f}" '
+            f'viewBox="0 0 {self.ancho:.0f} {self.alto:.0f}" role="img" aria-label="{esc(self.titulo)}">'
+            f"<title>{esc(self.titulo)}</title><style>{css}text{{white-space:pre}}{ANIM_COMUN}{self.css_extra}</style>"
+            f'<defs>{"".join(self.defs)}</defs>{"".join(self.partes)}</svg>'
         )
 
 
-def envolver(texto: str, max_ancho: float, medir) -> list[str]:
+def envolver(texto: str, max_ancho: float, fuente: Fuente, tam: float) -> list[str]:
     lineas, actual = [], ""
     for palabra in texto.split():
         prueba = f"{actual} {palabra}".strip()
-        if actual and medir(prueba) > max_ancho:
+        if actual and fuente.ancho(prueba, tam) > max_ancho:
             lineas.append(actual)
             actual = palabra
         else:
             actual = prueba
-    if actual:
-        lineas.append(actual)
-    return lineas
+    return lineas + ([actual] if actual else [])
 
 
-def campo_pixeles(lz: Lienzo, w, h, centro, radio, semilla, opacidad=1.0, encendidos=34):
-    """Grilla de píxeles que se desvanece hacia los bordes, con algunos puntos que titilan."""
-    t = lz.t
-    lz.defs.append(
-        f'<pattern id="grilla" width="22" height="22" patternUnits="userSpaceOnUse">'
-        f'<rect x="10.25" y="10.25" width="1.5" height="1.5" fill="{t["fg"]}" fill-opacity="{t["punto"]}"/></pattern>'
-        f'<radialGradient id="desvanecer" cx="{centro[0]}" cy="{centro[1]}" r="{radio}">'
-        f'<stop offset=".1" stop-color="#fff"/><stop offset="1" stop-color="#000"/></radialGradient>'
-        f'<mask id="mascara"><rect width="{w}" height="{h}" fill="url(#desvanecer)"/></mask>'
-    )
-    rnd = random.Random(semilla)
-    puntos = []
-    cx, cy = centro[0] * w, centro[1] * h
-    while len(puntos) < encendidos:
-        c, f = rnd.randrange(0, w // 22), rnd.randrange(0, h // 22)
-        x, y = c * 22 + 11, f * 22 + 11
-        # Más chances cerca del centro, donde la grilla se ve.
-        if ((x - cx) / w) ** 2 + ((y - cy) / h) ** 2 > rnd.random() * radio ** 2:
-            continue
-        lado = rnd.choice([2.5, 3, 3.5, 4])
-        puntos.append(
-            f'<rect class="titila" x="{x - lado / 2}" y="{y - lado / 2}" width="{lado}" height="{lado}" fill="{t["fg"]}" '
-            f'style="animation-delay:{rnd.uniform(0, 6):.2f}s;animation-duration:{rnd.uniform(3.5, 7):.2f}s"/>'
-        )
-    lz.crudo(
-        f'<g mask="url(#mascara)" opacity="{opacidad}" shape-rendering="crispEdges">'
-        f'<rect width="{w}" height="{h}" fill="url(#grilla)"/>{"".join(puntos)}</g>'
-    )
+def flecha(x, y, tam, color, ancho_trazo=2) -> str:
+    return (f'<g transform="translate({x:.1f} {y:.1f}) scale({tam / 24:.3f})" stroke="{color}" '
+            f'stroke-width="{ancho_trazo}">{FLECHA}</g>')
 
 
-# ─── Piezas ─────────────────────────────────────────────────────────────────
+# ─── Encabezado: git log --graph ────────────────────────────────────────────
 
 W = 840
 
 
-def hero(tema: str) -> str:
-    lz = Lienzo(W, tema, f"{' '.join(PERFIL['nombre'])} — desarrollador {', '.join(PERFIL['roles'])}")
-    t = lz.t
-    pad = 44
-    alto = 600
-    campo_pixeles(lz, W, alto, (0.72, 0.38), 0.62, semilla=7)
+def encabezado(tema: str) -> str:
+    c = GH[tema]
+    oscuro = tema == "dark"
+    fila, y0, tam = 34, 84, 13
+    alto = y0 + fila * (len(COMMITS) - 1) + 70
+    s = Svg(W, alto, "git log de Facundo Basualdo: " + "; ".join(f"{k['fecha']}: {k['msg']}" for k in COMMITS))
+    s.add(f'<rect x=".5" y=".5" width="{W - 1}" height="{alto - 1}" rx="12" fill="{c["panel"]}" stroke="{c["border"]}"/>')
 
-    # Ubicación, con el punto que late.
-    chip_w = 12 + 6 + 10 + MONO.ancho(PERFIL["ubicacion"], 12) + 12
-    lz.crudo(f'<g class="sube" style="animation-delay:.05s">')
-    lz.rect(pad, 44, chip_w, 28, "bg", f'stroke="{t["border"]}"')
-    lz.rect(pad + 12, 55, 6, 6, "fg", 'class="ping" opacity=".6"')
-    lz.rect(pad + 12, 55, 6, 6, "fg")
-    lz.texto(pad + 28, 62.5, PERFIL["ubicacion"], 12, color="muted")
-    lz.crudo("</g>")
+    def prompt(y, comando, retraso, cursor=False):
+        x = 28
+        s.add(f'<g class="entra" style="animation-delay:{retraso}s">')
+        for texto, color in [("facu@basualdo", c["user"]), (":", c["fg"]), ("~", c["path"]), ("$ ", c["fg"])]:
+            s.t(x, y, texto, tam, MONO_B if color != c["fg"] else MONO, color)
+            x += MONO.ancho(texto, tam)
+        if comando:
+            s.t(x, y, comando, tam, MONO, c["fg"])
+            x += MONO.ancho(comando, tam)
+        if cursor:
+            s.add(f'<rect class="cursor" x="{x + 2:.1f}" y="{y - 11}" width="8" height="15" fill="{c["fg"]}"/>')
+        s.add("</g>")
 
-    # Nombre en Geist Pixel, letra por letra; algunas letras cambian de forma de a ratos.
-    tam = 96
-    rnd = random.Random(3)
-    indice = 0
-    y = 72 + 44 + tam * 0.74
-    for linea in PERFIL["nombre"]:
-        x = pad - 4
-        for letra in linea:
-            retraso = 0.15 + indice * 0.04
-            lz.crudo(f'<g class="sube" style="animation-delay:{retraso:.2f}s">')
-            if rnd.random() < 0.45:
-                forma = rnd.choice(FORMAS)
-                demora = rnd.uniform(2.5, 10)
-                lz.texto(x, y, letra, tam, PIXEL, clase="base", estilo=f"animation-delay:{demora:.2f}s")
-                lz.texto(x, y, letra, tam, forma, clase="forma", estilo=f"animation-delay:{demora:.2f}s")
-            else:
-                lz.texto(x, y, letra, tam, PIXEL)
-            lz.crudo("</g>")
-            x += PIXEL.avance(letra, tam)
-            indice += 1
-        y += tam * 0.95
+    prompt(40, "git log --graph --oneline --since=2022", 0.1)
 
-    # "> desarrollador <rol>█", con el rol decodificándose como en el sitio.
-    y_prompt = y - tam * 0.95 + 64
-    tp = 22
-    cw = MONO.avance("a", tp)
-    lz.crudo('<g class="sube" style="animation-delay:.6s">')
-    lz.texto(pad, y_prompt, ">", tp)
-    lz.texto(pad + cw * 2, y_prompt, "desarrollador", tp, color="muted")
-    x_rol = pad + cw * 16
-    roles = PERFIL["roles"]
-    intervalo, duracion, cuadros = 2.8, 0.7, 7
-    total = intervalo * len(roles)
-    rnd = random.Random(11)
-    tramos = []  # (texto, inicio, fin)
-    for k, rol in enumerate(roles):
-        t0 = k * intervalo
-        for j in range(cuadros):
-            resueltos = int(j / cuadros * len(rol))
-            ruido = "".join(" " if c == " " else rnd.choice(SIGNOS) for c in rol[resueltos:])
-            tramos.append((rol[:resueltos] + ruido, t0 + j * duracion / cuadros, t0 + (j + 1) * duracion / cuadros))
-        tramos.append((rol, t0 + duracion, t0 + intervalo))
-    for texto, a, b in tramos:
-        if a == 0:
-            valores, tiempos = "1;0", f"0;{b / total:.4f}"
+    # Grafo: rieles por rama y curvas donde nace cada una.
+    lx = lambda lane: 38 + lane * 20
+    yf = lambda i: y0 + i * fila - 4.5
+    color_ref = lambda ref: c["fg"] if ref == "HEAD" else (COLOR[ref][0 if oscuro else 1] if ref in COLOR else c["muted"])
+    ramas = {1: "mifacu", 2: "juegachos"}
+    s.add(f'<path class="traza" pathLength="1" d="M{lx(0)} {yf(0)} V{yf(len(COMMITS) - 1)}" stroke="{c["lane"]}" stroke-width="2" fill="none"/>')
+    for i, k in enumerate(COMMITS):
+        if k["lane"]:
+            padre = yf(i + 1)
+            d = (f"M{lx(0)} {padre} C{lx(0)} {padre - fila / 2} {lx(k['lane'])} {yf(i) + fila / 2} {lx(k['lane'])} {yf(i)} "
+                 f"V{yf(0)}")
+            s.add(f'<path class="traza" pathLength="1" style="animation-delay:{0.3 + i * 0.1:.2f}s" d="{d}" '
+                  f'stroke="{color_ref(ramas[k["lane"]])}" stroke-width="2" fill="none"/>')
+    # Las ramas abiertas también tienen un commit arriba: siguen en curso.
+    for lane, ref in ramas.items():
+        s.add(f'<circle class="entra" style="animation-delay:1.2s" cx="{lx(lane)}" cy="{yf(0)}" r="4" fill="{c["panel"]}" '
+              f'stroke="{color_ref(ref)}" stroke-width="2"/>')
+
+    x_txt = lx(2) + 30
+    for i, k in enumerate(COMMITS):
+        y = y0 + i * fila
+        col = color_ref(k["ref"])
+        s.add(f'<g class="entra" style="animation-delay:{0.25 + i * 0.12:.2f}s">')
+        if k["ref"] == "HEAD":
+            s.add(f'<circle cx="{lx(0)}" cy="{yf(i)}" r="6" fill="{c["fg"]}"/>'
+                  f'<circle cx="{lx(0)}" cy="{yf(i)}" r="10" fill="none" stroke="{c["fg"]}" stroke-opacity=".25" stroke-width="2"/>')
         else:
-            valores, tiempos = "0;1;0", f"0;{a / total:.4f};{b / total:.4f}"
-        lz.texto(x_rol, y_prompt, texto, tp, opacidad=None, estilo="white-space:pre",
-                 extra=f'opacity="0"><animate attributeName="opacity" values="{valores}" keyTimes="{tiempos}" '
-                       f'calcMode="discrete" dur="{total}s" repeatCount="indefinite"/')
-    # Cursor: salta al final de cada rol.
-    xs, ts = [], []
-    for k, rol in enumerate(roles):
-        xs.append(f"{x_rol + cw * len(rol) + 3:.1f}")
-        ts.append(f"{k * intervalo / total:.4f}")
-    lz.crudo(
-        f'<rect class="cursor" x="{xs[0]}" y="{y_prompt - tp * 0.8:.1f}" width="{cw:.1f}" height="{tp * 0.95:.1f}" fill="{t["fg"]}">'
-        f'<animate attributeName="x" values="{";".join(xs)}" keyTimes="{";".join(ts)}" '
-        f'calcMode="discrete" dur="{total}s" repeatCount="indefinite"/></rect>'
+            s.add(f'<circle cx="{lx(k["lane"])}" cy="{yf(i)}" r="5" fill="{col}"/>')
+        x = x_txt
+        s.t(x, y, k["hash"], tam, MONO, c["hash"])
+        x += MONO.ancho(k["hash"] + " ", tam)
+        if k["ref"] == "HEAD":
+            partes = [("(", c["hash"], MONO), ("HEAD", c["head"], MONO_B), (" -> ", c["hash"], MONO),
+                      ("main", c["main"], MONO_B), (") ", c["hash"], MONO)]
+        else:
+            partes = [("(", c["hash"], MONO), (NOMBRE_REF[k["ref"]], col, MONO_B), (") ", c["hash"], MONO)]
+        for texto, color, fuente in partes:
+            s.t(x, y, texto, tam, fuente, color)
+            x += MONO.ancho(texto, tam)
+        s.t(x, y, k["msg"], tam, MONO_B if k["ref"] == "HEAD" else MONO, c["fg"])
+        s.t(W - 28, y, k["fecha"], 12, MONO, c["muted"], ancla="end")
+        s.add("</g>")
+
+    prompt(alto - 26, "", 0.25 + len(COMMITS) * 0.12 + 0.1, cursor=True)
+    return s.render()
+
+
+# ─── Tarjetas de proyectos, cada una con su identidad ───────────────────────
+
+CW, CH = 412, 248
+
+
+def pildora(s: Svg, x, y, texto, fuente, tam, color_txt, fondo=None, borde=None, rx=999, pad=11, alto=24) -> float:
+    w = fuente.ancho(texto, tam) + 2 * pad
+    attrs = f'fill="{fondo or "none"}"' + (f' stroke="{borde}"' if borde else "")
+    s.add(f'<rect x="{x:.1f}" y="{y:.1f}" width="{w:.1f}" height="{alto}" rx="{min(rx, alto / 2)}" {attrs}/>')
+    s.t(x + pad, y + alto / 2 + tam * 0.36, texto, tam, fuente, color_txt)
+    return w
+
+
+def tarjeta_mifacu() -> str:
+    s = Svg(CW, CH, PROYECTOS[0][2])
+    s.defs.append(
+        '<linearGradient id="fondo" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2552e2"/>'
+        '<stop offset="1" stop-color="#3863f5"/></linearGradient>'
+        '<radialGradient id="luz" cx=".9" cy=".05" r=".7"><stop offset="0" stop-color="#7aa7ff" stop-opacity=".55"/>'
+        '<stop offset="1" stop-color="#7aa7ff" stop-opacity="0"/></radialGradient>'
+        f'<clipPath id="borde"><rect width="{CW}" height="{CH}" rx="16"/></clipPath>'
     )
-    lz.crudo("</g>")
-
-    # Resumen.
-    y_res = y_prompt + 46
-    lineas = envolver(PERFIL["resumen"], 640, lambda s: MONO.ancho(s, 14))
-    lz.crudo('<g class="sube" style="animation-delay:.75s">')
-    for i, linea in enumerate(lineas):
-        lz.texto(pad, y_res + i * 24, linea, 14, color="muted")
-    lz.crudo("</g>")
-
-    # Cifras.
-    y_cif = y_res + (len(lineas) - 1) * 24 + 40
-    lz.rect(pad, y_cif, W - 2 * pad, 1, "border", 'class="linea" style="animation-delay:.9s"')
-    col = (W - 2 * pad) / 4
-    filas = 1
-    for i, (valor, etiqueta) in enumerate(CIFRAS):
-        lz.crudo(f'<g class="sube" style="animation-delay:{1 + i * 0.08:.2f}s">')
-        lz.texto(pad + i * col, y_cif + 52, valor, 38, PIXEL)
-        lineas_et = envolver(etiqueta, col - 20, lambda s: MONO.ancho(s, 12))
-        filas = max(filas, len(lineas_et))
-        for j, linea in enumerate(lineas_et):
-            lz.texto(pad + i * col, y_cif + 76 + j * 17, linea, 12, color="muted")
-        lz.crudo("</g>")
-    return lz.svg(y_cif + 108 + (filas - 1) * 17)
-
-
-def seccion(clave: str, tema: str) -> str:
-    numero, titulo, bajada = SECCIONES[clave]
-    lz = Lienzo(W, tema, f"{numero} — {titulo}")
-    derecha = f"/ {titulo.lower()}"
-    x_linea = MONO.ancho(numero, 12) + 16
-    fin_linea = W - MONO.ancho(derecha, 12) - 16
-    aire = 48  # separación con lo que hay arriba
-    lz.crudo(f'<g transform="translate(0 {aire})">')
-    lz.texto(0, 20, numero, 12)
-    lz.rect(x_linea, 15.5, fin_linea - x_linea, 1, "border", 'class="linea"')
-    lz.texto(W, 20, derecha, 12, color="muted", ancla="end")
-    x = 0
-    for i, letra in enumerate(titulo):
-        lz.crudo(f'<g class="sube" style="animation-delay:{0.1 + i * 0.04:.2f}s">')
-        lz.texto(x, 104, letra, 60, PIXEL)
-        lz.crudo("</g>")
-        x += PIXEL.avance(letra, 60)
-    lineas = envolver(bajada, W - 120, lambda s: MONO.ancho(s, 14))
-    lz.crudo('<g class="sube" style="animation-delay:.3s">')
-    for i, linea in enumerate(lineas):
-        lz.texto(0, 146 + i * 24, linea, 14, color="muted")
-    lz.crudo("</g></g>")
-    return lz.svg(aire + 146 + (len(lineas) - 1) * 24 + 16, fondo=False, borde=False)
-
-
-def chips(lz: Lienzo | None, x0, y0, ancho_max, items, tam, pad, alto, sep, color="muted", opacidad=None):
-    """Etiquetas con borde, en filas. Devuelve el alto ocupado."""
-    x, y = x0, y0
-    for item in items:
-        w = MONO.ancho(item, tam) + 2 * pad
-        if x > x0 and x + w > x0 + ancho_max:
-            x, y = x0, y + alto + sep
-        if lz:
-            lz.rect(x + 0.5, y + 0.5, w - 1, alto - 1, "none", f'stroke="{lz.t["border"]}"')
-            lz.texto(x + pad, y + alto / 2 + tam * 0.36, item, tam, color=color, opacidad=opacidad)
-        x += w + sep
-    return y + alto - y0
-
-
-CARD_W = 412
-CARD_PAD = 28
-
-
-def medir_tarjeta(p) -> tuple[float, float]:
-    """Alto de la parte de arriba (texto) y de abajo (stack + pie) de una tarjeta."""
-    interior = CARD_W - 2 * CARD_PAD
-    arriba = 40 + 50
-    arriba += 24 * len(envolver(p["bajada"], interior, lambda s: MONO.ancho(s, 13)))
-    arriba += 12 + 20 * len(envolver(p["descripcion"], interior, lambda s: MONO.ancho(s, 12.5)))
-    for d in p["destacados"]:
-        arriba += 8 + 20 * len(envolver(d, interior - 22, lambda s: MONO.ancho(s, 12.5)))
-    abajo = 20 + chips(None, 0, 0, interior, p["stack"], 11, 8, 22, 6) + 18 + 1 + 16 + pie_lineas(p) * 20
-    return arriba, abajo
-
-
-def pie(p) -> tuple[list[tuple[int, float, str]], int]:
-    """Ubica rol y enlaces como el flex-wrap del sitio: todo en una fila si entra
-    (rol a la izquierda, enlaces a la derecha); si no, los enlaces bajan alineados
-    a la izquierda. Devuelve (fila, x, enlace) y la cantidad de filas."""
-    interior = CARD_W - 2 * CARD_PAD
-    anchos = [MONO.ancho(e, 12) + 2 + 14 for e in p["enlaces"]]
-    total = sum(anchos) + 16 * (len(anchos) - 1)
-    if MONO.ancho(p["rol"], 12) + 20 + total <= interior:
-        x = interior - total
-        pos = []
-        for e, w in zip(p["enlaces"], anchos):
-            pos.append((0, x, e))
-            x += w + 16
-        return pos, 1
-    pos, fila, x = [], 1, 0.0
-    for e, w in zip(p["enlaces"], anchos):
-        if x > 0 and x + w > interior:
-            fila, x = fila + 1, 0.0
-        pos.append((fila, x, e))
-        x += w + 16
-    return pos, fila + 1
-
-
-def pie_lineas(p) -> int:
-    return pie(p)[1]
-
-
-def tarjeta(p, indice: int, tema: str, alto_arriba: float, alto_abajo: float) -> str:
-    lz = Lienzo(CARD_W, tema, f"{p['nombre']} — {p['bajada']}")
-    interior = CARD_W - 2 * CARD_PAD
-    x = CARD_PAD
-    lz.texto(x, 40, f"{indice + 1:02d}", 12, color="muted")
-    lz.texto(CARD_W - CARD_PAD, 40, p["periodo"], 12, color="muted", ancla="end")
-    lz.texto(x, 90, p["nombre"], 36, PIXEL)
-    y = 90
-    for linea in envolver(p["bajada"], interior, lambda s: MONO.ancho(s, 13)):
+    s.add('<g clip-path="url(#borde)">')
+    s.add(f'<rect width="{CW}" height="{CH}" fill="url(#fondo)"/><rect width="{CW}" height="{CH}" fill="url(#luz)"/>')
+    # Hoja rayada de cuaderno.
+    s.add("".join(f'<rect x="0" y="{y}" width="{CW}" height="1" fill="#fff" fill-opacity=".07"/>' for y in range(104, CH, 24)))
+    s.add('<rect x="70" y="92" width="1" height="200" fill="#ff8fa3" fill-opacity=".3"/>')
+    s.add("</g>")
+    s.add(f'<circle cx="50" cy="50" r="27" fill="#fff" fill-opacity=".18"/><image href="{png("mifacu")}" x="26" y="26" width="48" height="48"/>')
+    s.t(90, 47, "miFACU", 28, GEIST_B, "#fff")
+    s.t(91, 68, "Plataforma académica · cofundador", 13, GEIST, "#fff", extra='fill-opacity=".78"')
+    y = 122
+    for linea in envolver("Materias, correlativas, horarios y finales en un solo lugar, con IA para estudiar.", CW - 108, GEIST, 14.5):
+        s.t(84, y, linea, 14.5, GEIST, "#fff", extra='fill-opacity=".92"')
         y += 24
-        lz.texto(x, y, linea, 13, opacidad=0.8)
-    y += 12
-    for linea in envolver(p["descripcion"], interior, lambda s: MONO.ancho(s, 12.5)):
-        y += 20
-        lz.texto(x, y, linea, 12.5, color="muted")
-    for d in p["destacados"]:
-        y += 8
-        for j, linea in enumerate(envolver(d, interior - 22, lambda s: MONO.ancho(s, 12.5))):
-            y += 20
-            if j == 0:
-                lz.texto(x, y, "—", 12.5, color="muted")
-            lz.texto(x + 22, y, linea, 12.5, opacidad=0.85)
-
-    # Stack y pie, pegados abajo.
-    y = alto_arriba + 20 + (alto_abajo - medir_tarjeta(p)[1])
-    y += chips(lz, x, y, interior, p["stack"], 11, 8, 22, 6) + 18
-    lz.rect(x, y, interior, 1, "border")
-    y += 1 + 16 + 4
-    lz.texto(x, y + 4, p["rol"], 12, color="muted")
-    posiciones, _ = pie(p)
-    for fila, xe, enlace in posiciones:
-        yf = y + fila * 20
-        lz.texto(x + xe, yf + 4, enlace, 12)
-        lz.icono("flecha", x + xe + MONO.ancho(enlace, 12) + 2, yf - 7, 14)
-    return lz.svg(alto_arriba + alto_abajo + CARD_PAD)
+    x = 84
+    for p in ["App Store", "Google Play", "Web"]:
+        x += pildora(s, x, CH - 66, p, GEIST_B, 12, "#fff", fondo="#ffffff26") + 6
+    s.t(24, CH - 20, "mifacu.com.ar", 13, GEIST_B, "#fff")
+    s.add(flecha(24 + GEIST_B.ancho("mifacu.com.ar", 13) + 4, CH - 32, 14, "#fff"))
+    return s.render()
 
 
-def experiencia(tema: str) -> str:
-    lz = Lienzo(W, tema, "Experiencia: " + "; ".join(f"{e[1]} en {e[2]}" for e in EXPERIENCIA))
-    t = lz.t
-    x_cont = 300
-    x_txt = x_cont + 28
-    ancho_txt = W - x_txt - 32
-    y = 56
-    bloques = []
-    for i, (periodo, puesto, lugar, puntos) in enumerate(EXPERIENCIA):
-        y0 = y
-        lz.crudo(f'<g class="sube" style="animation-delay:{0.1 + i * 0.1:.2f}s">')
-        lz.rect(27, y - 22, 11, 11, "fg")
-        lz.texto(72, y - 8, periodo, 28, PIXEL, color="muted")
-        for linea in envolver(puesto, ancho_txt, lambda s: PIXEL.ancho(s, 26)):
-            lz.texto(x_txt, y, linea, 26, PIXEL)
-            y += 32
-        y += 2
-        lz.texto(x_txt, y, lugar, 12, color="muted")
-        y += 12
-        for punto in puntos:
-            for j, linea in enumerate(envolver(punto, ancho_txt - 22, lambda s: MONO.ancho(s, 13))):
-                y += 22
-                if j == 0:
-                    lz.texto(x_txt, y, "—", 13, color="muted")
-                lz.texto(x_txt + 22, y, linea, 13, opacidad=0.8)
-            y += 6
-        lz.crudo("</g>")
-        bloques.append((y0 - 30, y + 4))
-        y += 56
-    alto = y - 20
-    for a, b in bloques:
-        lz.rect(x_cont, a, 1, b - a, "border")
-    # Línea de tiempo: borde que se desvanece en las puntas y un haz que baja.
-    lz.defs.append(
-        f'<linearGradient id="riel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{t["border"]}" stop-opacity="0"/>'
-        f'<stop offset=".08" stop-color="{t["border"]}"/><stop offset=".92" stop-color="{t["border"]}"/>'
-        f'<stop offset="1" stop-color="{t["border"]}" stop-opacity="0"/></linearGradient>'
-        f'<linearGradient id="haz" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="{t["fg"]}"/>'
-        f'<stop offset=".1" stop-color="{t["fg"]}" stop-opacity=".4"/><stop offset="1" stop-color="{t["fg"]}" stop-opacity="0"/></linearGradient>'
+def tarjeta_juegachos() -> str:
+    s = Svg(CW, CH, PROYECTOS[1][2])
+    s.defs.append(
+        '<radialGradient id="g1" cx="1" cy="0" r=".9"><stop offset="0" stop-color="#e519e7" stop-opacity=".5"/><stop offset="1" stop-color="#e519e7" stop-opacity="0"/></radialGradient>'
+        '<radialGradient id="g2" cx="0" cy="1" r=".8"><stop offset="0" stop-color="#25e4f8" stop-opacity=".32"/><stop offset="1" stop-color="#25e4f8" stop-opacity="0"/></radialGradient>'
+        '<linearGradient id="neon" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff4ff8"/><stop offset="1" stop-color="#25e4f8"/></linearGradient>'
+        '<linearGradient id="marco" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e519e7"/><stop offset="1" stop-color="#25e4f8"/></linearGradient>'
+        '<filter id="brillo" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="6"/></filter>'
+        f'<clipPath id="borde"><rect width="{CW}" height="{CH}" rx="16"/></clipPath>'
     )
-    lz.partes.insert(0, f'<rect x="32" y="16" width="1" height="{alto - 32}" fill="url(#riel)"/>'
-                        f'<rect class="baja" x="32" y="16" width="1" height="{alto - 32}" fill="url(#haz)"/>')
-    return lz.svg(alto)
+    s.add('<g clip-path="url(#borde)">')
+    s.add(f'<rect width="{CW}" height="{CH}" fill="#0b031a"/><rect width="{CW}" height="{CH}" fill="url(#g1)"/><rect width="{CW}" height="{CH}" fill="url(#g2)"/>')
+    rnd = random.Random(5)
+    estrellas = []
+    while len(estrellas) < 22:
+        x, y, l = rnd.uniform(10, CW - 10), rnd.uniform(10, CH - 10), rnd.choice([2, 2, 3])
+        # Que no caigan sobre el logo ni el texto.
+        if (x < 350 and 16 < y < 92) or (14 < x < CW - 14 and 96 < y < CH - 8):
+            continue
+        col = rnd.choice(["#ffffff", "#25e4f8", "#ff4ff8", "#ffd700"])
+        estrellas.append(f'<rect class="titila" x="{x:.0f}" y="{y:.0f}" width="{l}" height="{l}" fill="{col}" '
+                         f'style="animation-delay:{rnd.uniform(0, 3):.2f}s;animation-duration:{rnd.uniform(2, 4.5):.2f}s"/>')
+    s.add("".join(estrellas))
+    s.add("</g>")
+    s.add(f'<rect x=".75" y=".75" width="{CW - 1.5}" height="{CH - 1.5}" rx="15.5" fill="none" stroke="url(#marco)" stroke-width="1.5"/>')
+    s.add(f'<image href="{png("juegachos")}" x="24" y="24" width="50" height="50"/>')
+    s.t(88, 58, "JUEGACHOS", 31, ARCHIVO, "url(#neon)", extra='filter="url(#brillo)" opacity=".8"')
+    s.t(88, 58, "JUEGACHOS", 31, ARCHIVO, "url(#neon)")
+    s.t(90, 80, "> 67 minijuegos · open source", 12, MONO, "#25e4f8")
+    y = 120
+    for linea in envolver("Ranking global y salas multijugador de hasta 8 personas, en el navegador. ¿Tenés una idea? Sumá tu juego con un PR.", CW - 48, MONO, 12.5):
+        s.t(24, y, linea, 12.5, MONO, "#ece6ff", extra='fill-opacity=".88"')
+        y += 21
+    x = 24
+    for texto, col in [("67 juegos", "#ff4ff8"), ("8 jugadores", "#25e4f8"), ("3D + 2D", "#ffd700")]:
+        x += pildora(s, x, CH - 70, texto, MONO_B, 11.5, col, borde=col, rx=4) + 8
+    s.add(f'<path d="M24 {CH - 31} l9 5.5 l-9 5.5 z" fill="#25e4f8"/>')
+    s.t(40, CH - 20, "JUGAR en juegachos.com", 12.5, MONO_B, "#25e4f8")
+    s.t(CW - 24, CH - 20, "8 colaboradores", 12, MONO, "#ece6ff", ancla="end", extra='fill-opacity=".6"')
+    return s.render()
+
+
+def tarjeta_brillo() -> str:
+    s = Svg(CW, CH, PROYECTOS[2][2])
+    s.defs.append(
+        '<linearGradient id="fondo" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0260bc"/><stop offset="1" stop-color="#2492ed"/></linearGradient>'
+        '<radialGradient id="bloom" cx=".85" cy=".15" r=".6"><stop offset="0" stop-color="#bfe3ff" stop-opacity=".55"/><stop offset="1" stop-color="#bfe3ff" stop-opacity="0"/></radialGradient>'
+        f'<clipPath id="borde"><rect width="{CW}" height="{CH}" rx="16"/></clipPath>'
+    )
+    s.add('<g clip-path="url(#borde)">')
+    s.add(f'<rect width="{CW}" height="{CH}" fill="url(#fondo)"/><rect width="{CW}" height="{CH}" fill="url(#bloom)"/>')
+    # Sol que gira despacio.
+    rayos = "".join(
+        f'<rect x="-3" y="-62" width="6" height="18" rx="3" fill="#fff" transform="rotate({a})"/>' for a in range(0, 360, 45))
+    s.add(f'<g transform="translate({CW - 58} 46) scale(.78)"><g class="gira"><circle r="30" fill="#fff" fill-opacity=".95"/>{rayos}</g></g>')
+    s.add("</g>")
+    s.t(24, 52, "Brillo", 30, SEGOE, "#fff", extra='font-weight="600"')
+    s.t(25, 75, "Control de brillo para Windows", 14, SEGOE, "#fff", extra='fill-opacity=".85"')
+    # Panel tipo flyout de Windows 11 con dos monitores.
+    fx, fy, fw, fh = 24, 96, CW - 48, 96
+    s.add(f'<rect x="{fx}" y="{fy}" width="{fw}" height="{fh}" rx="8" fill="#202020" fill-opacity=".9" stroke="#ffffff" stroke-opacity=".08"/>')
+    for i, (nombre, desde, hasta, dur) in enumerate([("Monitor 1", 0.72, 0.35, 5), ("Laptop", 0.4, 0.85, 6.5)]):
+        y = fy + 32 + i * 38
+        s.t(fx + 16, y + 4, nombre, 12, SEGOE, "#fff", extra='fill-opacity=".85"')
+        tx, tw = fx + 100, fw - 170
+        s.add(f'<rect x="{tx}" y="{y - 2}" width="{tw}" height="4" rx="2" fill="#9a9a9a" fill-opacity=".5"/>')
+        a, b = tx + tw * desde, tx + tw * hasta
+        vals = f"{a:.1f};{b:.1f};{a:.1f}"
+        anim = f'dur="{dur}s" repeatCount="indefinite" calcMode="spline" keyTimes="0;.5;1" keySplines=".4 0 .2 1;.4 0 .2 1"'
+        s.add(f'<rect x="{tx}" y="{y - 2}" width="{a - tx:.1f}" height="4" rx="2" fill="#4cc2ff">'
+              f'<animate attributeName="width" values="{a - tx:.1f};{b - tx:.1f};{a - tx:.1f}" {anim}/></rect>')
+        s.add(f'<circle cx="{a:.1f}" cy="{y}" r="9" fill="#454545"><animate attributeName="cx" values="{vals}" {anim}/></circle>'
+              f'<circle cx="{a:.1f}" cy="{y}" r="5" fill="#4cc2ff"><animate attributeName="cx" values="{vals}" {anim}/></circle>')
+        # Ícono de sol chico a la derecha.
+        s.add(f'<circle cx="{fx + fw - 22}" cy="{y}" r="4" fill="none" stroke="#fff" stroke-width="1.5" stroke-opacity=".8"/>')
+    s.t(24, CH - 20, "Microsoft Store", 13.5, SEGOE, "#fff", extra='font-weight="600"')
+    s.add(flecha(24 + 104, CH - 32, 14, "#fff"))
+    s.t(CW - 24, CH - 20, "C# · DDC/CI · WMI", 12, SEGOE, "#fff", ancla="end", extra='fill-opacity=".75"')
+    return s.render()
+
+
+def tarjeta_arco() -> str:
+    s = Svg(CW, CH, PROYECTOS[3][2])
+    oliva = "#324521"
+    s.defs.append(
+        '<pattern id="fina" width="12" height="12" patternUnits="userSpaceOnUse"><path d="M12 0H0V12" fill="none" stroke="#324521" stroke-opacity=".07"/></pattern>'
+        '<pattern id="gruesa" width="48" height="48" patternUnits="userSpaceOnUse"><path d="M48 0H0V48" fill="none" stroke="#324521" stroke-opacity=".13"/></pattern>'
+        f'<clipPath id="borde"><rect width="{CW}" height="{CH}" rx="16"/></clipPath>'
+    )
+    s.add('<g clip-path="url(#borde)">')
+    s.add(f'<rect width="{CW}" height="{CH}" fill="#f6f7f2"/><rect width="{CW}" height="{CH}" fill="url(#fina)"/><rect width="{CW}" height="{CH}" fill="url(#gruesa)"/>')
+    # Cota de plano arriba a la derecha.
+    x1, x2, yc = CW - 150, CW - 24, 30
+    s.add(f'<g stroke="{oliva}" stroke-opacity=".55" stroke-width="1"><path d="M{x1} {yc}H{x2}M{x1} {yc - 6}V{yc + 6}M{x2} {yc - 6}V{yc + 6}"/>'
+          f'<path d="M{x1} {yc}l6 -3v6z M{x2} {yc}l-6 -3v6z" fill="{oliva}" fill-opacity=".55"/></g>')
+    s.t((x1 + x2) / 2, yc - 6, "12,40 m", 10.5, MONO, oliva, ancla="middle", extra='fill-opacity=".7"')
+    s.add("</g>")
+    s.add(f'<rect x=".5" y=".5" width="{CW - 1}" height="{CH - 1}" rx="15.5" fill="none" stroke="#d6dacb"/>')
+    s.add(f'<rect x="24" y="24" width="48" height="48" rx="12" fill="#fff" stroke="#e1e4d8"/><image href="{png("arco")}" x="33" y="33.5" width="30" height="28.4"/>')
+    s.t(86, 50, "Arco", 28, INTER_B, "#111")
+    s.t(87, 70, "Software de gestión de obras", 13, INTER, "#55594d")
+    y = 112
+    for linea in envolver("Avance ponderado, planos con versiones, presupuestos y certificados desde Excel. Toda la seguridad en Row Level Security.", CW - 48, INTER, 13.5):
+        s.t(24, y, linea, 13.5, INTER, "#2b2e26")
+        y += 21
+    # Barra de avance de obra.
+    by = y + 4
+    s.t(24, by + 4, "Avance de obra", 11.5, INTER, "#55594d")
+    bx, bw = 130, CW - 24 - 130 - 40
+    s.add(f'<rect x="{bx}" y="{by - 4}" width="{bw}" height="8" rx="4" fill="{oliva}" fill-opacity=".12"/>'
+          f'<rect x="{bx}" y="{by - 4}" width="{bw * 0.68:.1f}" height="8" rx="4" fill="{oliva}">'
+          f'<animate attributeName="width" from="0" to="{bw * 0.68:.1f}" dur="1.6s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines=".2 0 .2 1"/></rect>')
+    s.t(CW - 24, by + 4, "68%", 11.5, INTER_B, oliva, ancla="end")
+    s.t(24, CH - 20, "arcosoftware.com.ar", 13, INTER_B, oliva)
+    s.add(flecha(24 + INTER_B.ancho("arcosoftware.com.ar", 13) + 4, CH - 32, 14, oliva))
+    s.t(CW - 24, CH - 20, "equipo de 4", 12, INTER, "#55594d", ancla="end")
+    return s.render()
+
+
+TARJETAS = {"mifacu": tarjeta_mifacu, "juegachos": tarjeta_juegachos, "brillo": tarjeta_brillo, "arco": tarjeta_arco}
+
+# ─── Stack ──────────────────────────────────────────────────────────────────
+
+
+def luminancia(hex_: str) -> float:
+    r, g, b = (int(hex_[i:i + 2], 16) / 255 for i in (1, 3, 5))
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
 
 
 def stack(tema: str) -> str:
-    lz = Lienzo(W, tema, "Stack: " + "; ".join(f"{g}: {', '.join(i)}" for g, i in STACK))
-    x_chips = 260
-    y = 0
-    for i, (grupo, items) in enumerate(STACK):
-        lz.crudo(f'<g class="sube" style="animation-delay:{i * 0.06:.2f}s">')
-        alto_fila = chips(None, 0, 0, W - x_chips - 28, items, 12, 10, 28, 8)
-        lz.texto(28, y + 26 + 18.5, f"{i + 1:02d}", 12)
-        lz.texto(28 + MONO.ancho("00 ", 12), y + 26 + 18.5, grupo.lower(), 12, color="muted")
-        chips(lz, x_chips, y + 26, W - x_chips - 28, items, 12, 10, 28, 8, color="fg", opacidad=0.85)
-        lz.crudo("</g>")
-        y += 26 + alto_fila + 26
-        if i < len(STACK) - 1:
-            lz.rect(0, y, W, 1, "border")
-    return lz.svg(y)
-
-
-def contacto(tema: str) -> str:
-    lz = Lienzo(W, tema, f"Escribime a {PERFIL['email']}")
-    alto = 150
-    campo_pixeles(lz, W, alto, (0.8, 0.8), 0.6, semilla=21, opacidad=0.6, encendidos=14)
-    x = 36
-    for i, letra in enumerate(PERFIL["email"]):
-        lz.crudo(f'<g class="sube" style="animation-delay:{0.1 + i * 0.03:.2f}s">')
-        lz.texto(x, 96, letra, 52, PIXEL)
-        lz.crudo("</g>")
-        x += PIXEL.avance(letra, 52)
-    lz.icono("flecha", x + 10, 56, 44, color="muted")
-    return lz.svg(alto)
-
-
-def boton(texto: str, icono: str | None, variante: str, tema: str) -> str:
-    t = TEMAS[tema]
-    tam, alto, pad = 14, 44, 20
-    w_icono = 16 + 8 if icono else 0
-    ancho = round(pad * 2 + w_icono + MONO.ancho(texto, tam))
-    lz = Lienzo(ancho, tema, texto)
-    if variante == "primario":
-        lz.rect(0, 0, ancho, alto, "fg")
-        color = t["bg"]
-    else:
-        lz.rect(0.5, 0.5, ancho - 1, alto - 1, "none", f'stroke="{t["borde_boton"]}"')
-        color = t["fg"]
-    x = pad
-    if icono:
-        lz.icono(icono, x, alto / 2 - 8, 16, color=color)
-        x += w_icono
-    lz.texto(x, alto / 2 + 5, texto, tam, color=color)
-    return lz.svg(alto, fondo=False, borde=False)
+    c = GH[tema]
+    piezas, x, y, alto, sep = [], 0.0, 0.0, 36, 8
+    for slug, nombre in STACK:
+        svg = (AQUI / "iconos" / f"{slug}.svg").read_text(encoding="utf-8")
+        d = re.search(r'<path d="([^"]+)"', svg).group(1)
+        color = re.search(r'fill="(#[0-9A-Fa-f]{6})"', svg).group(1)
+        if tema == "dark" and luminancia(color) < 0.2:
+            color = c["fg"]
+        w = 14 + 18 + 9 + MONO.ancho(nombre, 12.5) + 14
+        if x and x + w > W:
+            x, y = 0, y + alto + sep
+        piezas.append((x, y, w, d, color, nombre))
+        x += w + sep
+    s = Svg(W, y + alto + 1, "Stack: " + ", ".join(n for _, n in STACK))
+    for i, (x, y, w, d, color, nombre) in enumerate(piezas):
+        s.add(f'<g class="entra" style="animation-delay:{i * 0.04:.2f}s">')
+        s.add(f'<rect x="{x + .5:.1f}" y="{y + .5:.1f}" width="{w - 1:.1f}" height="{alto - 1}" rx="{alto / 2}" fill="{c["chip"]}" stroke="{c["border"]}"/>')
+        s.add(f'<path transform="translate({x + 14:.1f} {y + 9}) scale(.75)" d="{d}" fill="{color}"/>')
+        s.t(x + 41, y + alto / 2 + 4.5, nombre, 12.5, MONO, c["fg"])
+        s.add("</g>")
+    return s.render()
 
 
 # ─── README ─────────────────────────────────────────────────────────────────
 
 
-def imagen(nombre: str, alt: str, ancho: str | None = None) -> str:
-    w = f' width="{ancho}"' if ancho else ""
-    return (
-        f'<picture><source media="(prefers-color-scheme: dark)" srcset="./assets/{nombre}-dark.svg" />'
-        f'<img src="./assets/{nombre}-light.svg" alt="{esc(alt)}"{w} /></picture>'
-    )
-
-
-def enlace(href: str, contenido: str) -> str:
-    return f'<a href="{href}">{contenido}</a>'
+def imagen(nombre: str, alt: str, ancho: str, temas=True) -> str:
+    if not temas:
+        return f'<img src="./assets/{nombre}.svg" alt="{esc(alt)}" width="{ancho}" />'
+    return (f'<picture><source media="(prefers-color-scheme: dark)" srcset="./assets/{nombre}-dark.svg" />'
+            f'<img src="./assets/{nombre}-light.svg" alt="{esc(alt)}" width="{ancho}" /></picture>')
 
 
 SNAKE = "https://raw.githubusercontent.com/Facu-Basualdo/Facu-Basualdo/output/github-contribution-grid-snake"
 
-BOTONES = [
-    ("portafolio", "basualdo.dev", "web", "primario", PERFIL["web"]),
-    ("cv", "Descargar CV", "cv", "contorno", PERFIL["cv"]),
-    ("linkedin", "LinkedIn", "linkedin", "contorno", PERFIL["linkedin"]),
-    ("email", "Email", "mail", "contorno", f"mailto:{PERFIL['email']}"),
-]
-
 
 def readme() -> str:
-    r = []
-    r.append(enlace(PERFIL["web"], imagen("hero", "Facundo Basualdo — desarrollador full-stack, de producto, de IA aplicada y de tiempo real. " + PERFIL["resumen"], "100%")))
-    r.append("")
-    r.append("<p>\n  " + "\n  ".join(enlace(href, imagen(f"boton-{clave}", texto, None)) for clave, texto, _, _, href in BOTONES) + "\n</p>")
-    r.append("")
-    r.append(imagen("seccion-proyectos", "01 — Proyectos", "100%"))
-    r.append("")
+    tarjetas = []
     for i in range(0, len(PROYECTOS), 2):
-        par = PROYECTOS[i:i + 2]
-        r.append("<p>\n  " + "\n  ".join(
-            enlace(p["destino"], imagen(f"proyecto-{p['id']}", f"{p['nombre']} — {p['bajada']}. {p['descripcion']}", "49%"))
-            for p in par) + "\n</p>")
-    r.append("")
-    r.append(imagen("seccion-experiencia", "02 — Experiencia", "100%"))
-    r.append("")
-    r.append(imagen("experiencia", "Experiencia", "100%"))
-    r.append("")
-    r.append(imagen("seccion-stack", "03 — Stack", "100%"))
-    r.append("")
-    r.append(imagen("stack", "Stack", "100%"))
-    r.append("")
-    r.append(imagen("seccion-actividad", "04 — Actividad", "100%"))
-    r.append("")
-    r.append(
-        f'<picture>\n  <source media="(prefers-color-scheme: dark)" srcset="{SNAKE}-dark.svg" />\n'
-        f'  <img alt="Contribuciones en GitHub" src="{SNAKE}.svg" width="100%" />\n</picture>'
-    )
-    r.append("")
-    r.append(imagen("seccion-contacto", "05 — Contacto", "100%"))
-    r.append("")
-    r.append(enlace(f"mailto:{PERFIL['email']}", imagen("contacto", f"Escribime a {PERFIL['email']}", "100%")))
-    r.append("")
-    r.append("<p>\n  " + "\n  ".join(enlace(href, imagen(f"boton-{clave}", texto, None)) for clave, texto, _, _, href in BOTONES[1:]) + "\n</p>")
-    r.append("")
-    r.append("<!-- Generado con scripts/generar.py: editá los datos ahí y volvé a correrlo. -->")
-    return "\n".join(r) + "\n"
+        tarjetas.append("<p>\n" + "\n".join(
+            f'  <a href="{href}">{imagen(f"proyecto-{pid}", alt, "49%", temas=False)}</a>'
+            for pid, href, alt in PROYECTOS[i:i + 2]) + "\n</p>")
+    otros = " · ".join(f"[{n}]({u})" for n, u in OTROS)
+    return f"""<a href="{WEB}">{imagen("encabezado", "git log de Facundo Basualdo: dev full-stack en Resistencia, Chaco. Cofundador de miFACU, creador de Juegachos, autor de Brillo y parte del equipo de Arco.", "100%")}</a>
+
+### Hola, soy Facu 👋
+
+Estudio Ingeniería en Sistemas en la UTN FRRe y me gusta construir cosas que la gente use de verdad: apps en las tiendas, juegos que se juegan con amigos y herramientas que resuelven una molestia concreta.
+
+- 🛠️ Ahora mismo: **miFACU** como cofundador y **Juegachos** como maintainer.
+- 🎮 Juegachos es open source: si tenés una idea de juego, [mandá un PR]({PROYECTOS[1][1]}).
+- 🧠 Me interesan la IA aplicada, el tiempo real y los gráficos en el navegador.
+- 📫 [{EMAIL}](mailto:{EMAIL}) · [basualdo.dev]({WEB}) · [LinkedIn]({LINKEDIN})
+
+### 📌 Proyectos
+
+{chr(10).join(tarjetas)}
+
+<sub>También hice: {otros}</sub>
+
+### 🧰 Stack
+
+{imagen("stack", "Stack: " + ", ".join(n for _, n in STACK), "100%")}
+
+### 🐍 Actividad
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="{SNAKE}-dark.svg" />
+  <img alt="Mis contribuciones en GitHub" src="{SNAKE}.svg" width="100%" />
+</picture>
+
+<!-- Generado con scripts/generar.py: editá los datos ahí y volvé a correrlo. -->
+"""
 
 
 def main():
@@ -809,22 +536,11 @@ def main():
     for viejo in ASSETS.glob("*"):
         viejo.unlink()
     archivos = {}
-    for tema in TEMAS:
-        archivos[f"hero-{tema}"] = hero(tema)
-        for clave in SECCIONES:
-            archivos[f"seccion-{clave}-{tema}"] = seccion(clave, tema)
-        for i in range(0, len(PROYECTOS), 2):
-            par = PROYECTOS[i:i + 2]
-            medidas = [medir_tarjeta(p) for p in par]
-            arriba = max(m[0] for m in medidas)
-            abajo = max(m[1] for m in medidas)
-            for j, p in enumerate(par):
-                archivos[f"proyecto-{p['id']}-{tema}"] = tarjeta(p, i + j, tema, arriba, abajo)
-        archivos[f"experiencia-{tema}"] = experiencia(tema)
+    for tema in GH:
+        archivos[f"encabezado-{tema}"] = encabezado(tema)
         archivos[f"stack-{tema}"] = stack(tema)
-        archivos[f"contacto-{tema}"] = contacto(tema)
-        for clave, texto, icono, variante, _ in BOTONES:
-            archivos[f"boton-{clave}-{tema}"] = boton(texto, icono, variante, tema)
+    for pid, fn in TARJETAS.items():
+        archivos[f"proyecto-{pid}"] = fn()
     for nombre, contenido in archivos.items():
         (ASSETS / f"{nombre}.svg").write_text(contenido, encoding="utf-8")
     (RAIZ / "README.md").write_text(readme(), encoding="utf-8")
