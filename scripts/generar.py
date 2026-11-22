@@ -246,59 +246,45 @@ def texto_rico(s: "Svg", x, y, partes, tam):
 
 
 def presentacion() -> str:
-    """Tarjeta negra, igual que la consola: brillos tenues de los colores de miFACU
-    y Juegachos en las esquinas, texto en grises y filas con íconos de color."""
+    """Tarjeta negra con un color propio, el verde menta de siempre (#00FFA3):
+    brillo en la esquina, grilla de puntitos y un cursor que titila."""
     negro, borde = "#0a0a0a", "#2a2a30"
-    blanco, gris, gris_claro, apagado = "#fafafa", "#a1a1aa", "#d4d4d8", "#71717a"
-    col = lambda ref: COLOR[ref][0]
+    blanco, gris, apagado = "#fafafa", "#a1a1aa", "#71717a"
+    menta, menta_oscuro = "#00ffa3", "#00b377"
     parrafo = ("Estudio Ingeniería en Sistemas en la UTN FRRe y me gusta construir cosas que la gente use de verdad: "
                "apps en las tiendas, juegos que se juegan con amigos y herramientas que resuelven una molestia concreta.")
     lineas = envolver(parrafo, W - 88, GEIST, 15)
-    y_div = 118 + 24 * len(lineas)
-    filas = [
-        ("herramienta", "#4ade80", [("Ahora mismo: ", GEIST, gris_claro), ("miFACU", GEIST_B, col("mifacu")),
-                                    (" como cofundador y ", GEIST, gris_claro), ("Juegachos", GEIST_B, col("juegachos")),
-                                    (" como maintainer.", GEIST, gris_claro)]),
-        ("joystick", col("juegachos"), [("Juegachos es open source: si tenés una idea de juego, ", GEIST, gris_claro),
-                                        ("mandá un PR", GEIST_B, blanco), (".", GEIST, gris_claro)]),
-        ("", "", [("Disponible para trabajo ", GEIST, gris_claro), ("remoto o presencial", GEIST_B, blanco),
-                  (" · UTC-3.", GEIST, gris_claro)]),
-    ]
-    alto = y_div + 30 + 34 * len(filas)
+    alto = 130 + 24 * (len(lineas) - 1) + 44
     s = Svg(W, alto, "Hola, soy Facu. " + parrafo)
     s.defs.append(
         f'<clipPath id="panel"><rect width="{W}" height="{alto}" rx="10"/></clipPath>'
-        f'<radialGradient id="azul" cx="1" cy="0" r=".75"><stop offset="0" stop-color="{col("mifacu")}" stop-opacity=".2"/>'
-        f'<stop offset="1" stop-color="{col("mifacu")}" stop-opacity="0"/></radialGradient>'
-        f'<radialGradient id="rosa" cx=".05" cy="1.1" r=".6"><stop offset="0" stop-color="{col("juegachos")}" stop-opacity=".12"/>'
-        f'<stop offset="1" stop-color="{col("juegachos")}" stop-opacity="0"/></radialGradient>'
-        '<pattern id="puntos" width="18" height="18" patternUnits="userSpaceOnUse"><rect x="8" y="8" width="1.2" height="1.2" fill="#fff" fill-opacity=".09"/></pattern>'
-        '<radialGradient id="desvanece" cx="1" cy="0" r=".7"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#000"/></radialGradient>'
+        f'<radialGradient id="glow" cx="1" cy="0" r=".8"><stop offset="0" stop-color="{menta}" stop-opacity=".16"/>'
+        f'<stop offset="1" stop-color="{menta}" stop-opacity="0"/></radialGradient>'
+        f'<radialGradient id="glow2" cx="0" cy="1.2" r=".6"><stop offset="0" stop-color="{menta_oscuro}" stop-opacity=".08"/>'
+        f'<stop offset="1" stop-color="{menta_oscuro}" stop-opacity="0"/></radialGradient>'
+        f'<pattern id="puntos" width="18" height="18" patternUnits="userSpaceOnUse"><rect x="8" y="8" width="1.4" height="1.4" fill="{menta}" fill-opacity=".22"/></pattern>'
+        '<radialGradient id="desvanece" cx="1" cy="0" r=".65"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#000"/></radialGradient>'
         f'<mask id="esquina"><rect width="{W}" height="{alto}" fill="url(#desvanece)"/></mask>'
     )
     s.add(f'<g clip-path="url(#panel)"><rect width="{W}" height="{alto}" fill="{negro}"/>'
-          f'<rect width="{W}" height="{alto}" fill="url(#azul)"/><rect width="{W}" height="{alto}" fill="url(#rosa)"/>'
-          f'<rect width="{W}" height="{alto}" fill="url(#puntos)" mask="url(#esquina)"/></g>')
+          f'<rect width="{W}" height="{alto}" fill="url(#glow)"/><rect width="{W}" height="{alto}" fill="url(#glow2)"/>'
+          f'<rect width="{W}" height="{alto}" fill="url(#puntos)" mask="url(#esquina)"/>'
+          f'<rect x="0" y="0" width="3" height="{alto}" fill="{menta}"/></g>')
     s.add(f'<rect x=".5" y=".5" width="{W - 1}" height="{alto - 1}" rx="10" fill="none" stroke="{borde}"/>')
 
     s.add('<g class="entra" style="animation-delay:.05s">')
     s.t(44, 70, "Hola, soy Facu", 32, GEIST_B, blanco)
+    x = 44 + GEIST_B.ancho("Hola, soy Facu", 32) + 6
+    s.add(f'<rect class="cursor" x="{x:.1f}" y="46" width="14" height="27" fill="{menta}"/>')
     s.add("</g>")
     s.add('<g class="entra" style="animation-delay:.15s">')
-    s.add(icono("pin", 44, 84, 14, apagado))
+    s.add(icono("pin", 44, 84, 14, menta))
     s.t(64, 95, "Resistencia, Chaco · desarrollador full-stack", 12.5, MONO, apagado)
     s.add("</g>")
     s.add('<g class="entra" style="animation-delay:.25s">')
     for i, linea in enumerate(lineas):
         s.t(44, 130 + i * 24, linea, 15, GEIST, gris)
     s.add("</g>")
-    s.add(f'<path d="M44 {y_div}H{W - 44}" stroke="{borde}" stroke-dasharray="3 5"/>')
-    for i, (nombre, color, partes) in enumerate(filas):
-        y = y_div + 38 + i * 34
-        s.add(f'<g class="entra" style="animation-delay:{0.4 + i * 0.12:.2f}s">')
-        s.add(f'<circle cx="49" cy="{y - 5}" r="3" fill="{apagado}"/>')
-        texto_rico(s, 64, y, partes, 14.5)
-        s.add("</g>")
     return s.render()
 
 
@@ -307,7 +293,7 @@ def boton(texto: str, nombre_icono: str) -> str:
     ancho = 14 + 16 + 9 + GEIST_B.ancho(texto, tam) + 16
     s = Svg(ancho, alto, texto)
     s.add(f'<rect x=".5" y=".5" width="{ancho - 1:.1f}" height="{alto - 1}" rx="8" fill="#0a0a0a" stroke="#2a2a30"/>')
-    s.add(icono(nombre_icono, 14, alto / 2 - 8, 16, "#a1a1aa"))
+    s.add(icono(nombre_icono, 14, alto / 2 - 8, 16, "#00ffa3"))
     s.t(39, alto / 2 + 4.6, texto, tam, GEIST_B, "#e4e4e7")
     return s.render()
 
@@ -666,7 +652,7 @@ def readme() -> str:
             for pid, href, alt in PROYECTOS[i:i + 2]) + "\n</p>")
     otros = " · ".join(f"[{n}]({u})" for n, u in OTROS)
     botones = "\n".join(f'  <a href="{href}">{imagen(f"boton-{clave}", texto, "auto", temas=False)}</a>' for clave, texto, _, href in BOTONES)
-    return f"""{imagen("presentacion", "Hola, soy Facu. Estudio Ingeniería en Sistemas en la UTN FRRe y me gusta construir cosas que la gente use de verdad. Ahora mismo: miFACU como cofundador y Juegachos como maintainer.", "100%", temas=False)}
+    return f"""{imagen("presentacion", "Hola, soy Facu. Estudio Ingeniería en Sistemas en la UTN FRRe y me gusta construir cosas que la gente use de verdad. Resistencia, Chaco · desarrollador full-stack.", "100%", temas=False)}
 
 <p>
 {botones}

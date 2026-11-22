@@ -1,4 +1,4 @@
-<img src="./assets/presentacion.svg" alt="Hola, soy Facu. Estudio Ingeniería en Sistemas en la UTN FRRe y me gusta construir cosas que la gente use de verdad. Ahora mismo: miFACU como cofundador y Juegachos como maintainer." width="100%" />
+<img src="./assets/presentacion.svg" alt="Hola, soy Facu. Estudio Ingeniería en Sistemas en la UTN FRRe y me gusta construir cosas que la gente use de verdad. Resistencia, Chaco · desarrollador full-stack." width="100%" />
 
 <p>
   <a href="mailto:facundo@basualdo.dev"><img src="./assets/boton-email.svg" alt="facundo@basualdo.dev" /></a>
