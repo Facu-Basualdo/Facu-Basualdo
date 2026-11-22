@@ -245,66 +245,74 @@ def texto_rico(s: "Svg", x, y, partes, tam):
 # ─── Presentación ───────────────────────────────────────────────────────────
 
 
-def presentacion(tema: str) -> str:
-    c = GH[tema]
-    oscuro = tema == "dark"
-    col = lambda ref: COLOR[ref][0 if oscuro else 1]
-    enlace = "#4493f8" if oscuro else "#0969da"
+def presentacion() -> str:
+    """Tarjeta negra, igual que la consola: brillos tenues de los colores de miFACU
+    y Juegachos en las esquinas, texto en grises y filas con íconos de color."""
+    negro, borde = "#0a0a0a", "#2a2a30"
+    blanco, gris, gris_claro, apagado = "#fafafa", "#a1a1aa", "#d4d4d8", "#71717a"
+    col = lambda ref: COLOR[ref][0]
     parrafo = ("Estudio Ingeniería en Sistemas en la UTN FRRe y me gusta construir cosas que la gente use de verdad: "
                "apps en las tiendas, juegos que se juegan con amigos y herramientas que resuelven una molestia concreta.")
-    lineas = envolver(parrafo, W - 80, GEIST, 15)
-    y_div = 112 + 24 * len(lineas)
+    lineas = envolver(parrafo, W - 88, GEIST, 15)
+    y_div = 118 + 24 * len(lineas)
     filas = [
-        ("herramienta", c["main"], [("Ahora mismo: ", GEIST, c["fg"]), ("miFACU", GEIST_B, col("mifacu")),
-                                    (" como cofundador y ", GEIST, c["fg"]), ("Juegachos", GEIST_B, col("juegachos")),
-                                    (" como maintainer.", GEIST, c["fg"])]),
-        ("joystick", col("juegachos"), [("Juegachos es open source: si tenés una idea de juego, ", GEIST, c["fg"]),
-                                        ("mandá un PR", GEIST_B, enlace), (".", GEIST, c["fg"])]),
-        ("cerebro", c["hash"], [("Me interesan la IA aplicada, el tiempo real y los gráficos en el navegador.", GEIST, c["fg"])]),
+        ("herramienta", "#4ade80", [("Ahora mismo: ", GEIST, gris_claro), ("miFACU", GEIST_B, col("mifacu")),
+                                    (" como cofundador y ", GEIST, gris_claro), ("Juegachos", GEIST_B, col("juegachos")),
+                                    (" como maintainer.", GEIST, gris_claro)]),
+        ("joystick", col("juegachos"), [("Juegachos es open source: si tenés una idea de juego, ", GEIST, gris_claro),
+                                        ("mandá un PR", GEIST_B, blanco), (".", GEIST, gris_claro)]),
+        ("cerebro", "#fbbf24", [("Me interesan la IA aplicada, el tiempo real y los gráficos en el navegador.", GEIST, gris_claro)]),
     ]
-    alto = y_div + 30 + 38 * len(filas)
+    alto = y_div + 34 + 40 * len(filas)
     s = Svg(W, alto, "Hola, soy Facu. " + parrafo)
     s.css_extra = ("@keyframes saluda{0%,60%,100%{transform:rotate(0)}10%,30%{transform:rotate(16deg)}20%{transform:rotate(-8deg)}40%{transform:rotate(10deg)}50%{transform:rotate(-4deg)}}"
                    ".saluda{animation:saluda 2.4s ease-in-out .6s 3;transform-box:fill-box;transform-origin:70% 80%}")
-    # Franja con los colores de los proyectos.
-    paradas = "".join(f'<stop offset="{i / 3:.3f}" stop-color="{col(r)}"/>' for i, r in enumerate(["mifacu", "juegachos", "brillo", "arco"]))
-    s.defs.append(f'<linearGradient id="franja" x1="0" y1="0" x2="1" y2="0">{paradas}</linearGradient>'
-                  f'<clipPath id="panel"><rect width="{W}" height="{alto}" rx="12"/></clipPath>')
-    s.add(f'<rect x=".5" y=".5" width="{W - 1}" height="{alto - 1}" rx="12" fill="{c["panel"]}" stroke="{c["border"]}"/>')
-    s.add(f'<rect class="traza" width="{W}" height="4" fill="url(#franja)" clip-path="url(#panel)"/>')
+    s.defs.append(
+        f'<clipPath id="panel"><rect width="{W}" height="{alto}" rx="10"/></clipPath>'
+        f'<radialGradient id="azul" cx="1" cy="0" r=".75"><stop offset="0" stop-color="{col("mifacu")}" stop-opacity=".2"/>'
+        f'<stop offset="1" stop-color="{col("mifacu")}" stop-opacity="0"/></radialGradient>'
+        f'<radialGradient id="rosa" cx=".05" cy="1.1" r=".6"><stop offset="0" stop-color="{col("juegachos")}" stop-opacity=".12"/>'
+        f'<stop offset="1" stop-color="{col("juegachos")}" stop-opacity="0"/></radialGradient>'
+        '<pattern id="puntos" width="18" height="18" patternUnits="userSpaceOnUse"><rect x="8" y="8" width="1.2" height="1.2" fill="#fff" fill-opacity=".09"/></pattern>'
+        '<radialGradient id="desvanece" cx="1" cy="0" r=".7"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#000"/></radialGradient>'
+        f'<mask id="esquina"><rect width="{W}" height="{alto}" fill="url(#desvanece)"/></mask>'
+    )
+    s.add(f'<g clip-path="url(#panel)"><rect width="{W}" height="{alto}" fill="{negro}"/>'
+          f'<rect width="{W}" height="{alto}" fill="url(#azul)"/><rect width="{W}" height="{alto}" fill="url(#rosa)"/>'
+          f'<rect width="{W}" height="{alto}" fill="url(#puntos)" mask="url(#esquina)"/></g>')
+    s.add(f'<rect x=".5" y=".5" width="{W - 1}" height="{alto - 1}" rx="10" fill="none" stroke="{borde}"/>')
 
     s.add('<g class="entra" style="animation-delay:.05s">')
-    s.t(40, 64, "Hola, soy Facu", 28, GEIST_B, c["fg"])
-    s.t(40 + GEIST_B.ancho("Hola, soy Facu ", 28), 64, "👋", 26,
-        "'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif", c["fg"], extra='class="saluda"')
+    s.t(44, 70, "Hola, soy Facu", 32, GEIST_B, blanco)
+    s.t(44 + GEIST_B.ancho("Hola, soy Facu ", 32), 70, "👋", 28,
+        "'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif", blanco, extra='class="saluda"')
     s.add("</g>")
     s.add('<g class="entra" style="animation-delay:.15s">')
-    s.add(icono("pin", 40, 77, 14, c["muted"]))
-    s.t(60, 88, "Resistencia, Chaco · desarrollador full-stack", 12.5, MONO, c["muted"])
+    s.add(icono("pin", 44, 84, 14, apagado))
+    s.t(64, 95, "Resistencia, Chaco · desarrollador full-stack", 12.5, MONO, apagado)
     s.add("</g>")
     s.add('<g class="entra" style="animation-delay:.25s">')
     for i, linea in enumerate(lineas):
-        s.t(40, 124 + i * 24, linea, 15, GEIST, c["fg"], extra='fill-opacity=".9"')
+        s.t(44, 130 + i * 24, linea, 15, GEIST, gris)
     s.add("</g>")
-    s.add(f'<rect x="40" y="{y_div}" width="{W - 80}" height="1" fill="{c["border"]}"/>')
+    s.add(f'<path d="M44 {y_div}H{W - 44}" stroke="{borde}" stroke-dasharray="3 5"/>')
     for i, (nombre, color, partes) in enumerate(filas):
-        y = y_div + 30 + i * 38
+        y = y_div + 34 + i * 40
         s.add(f'<g class="entra" style="animation-delay:{0.4 + i * 0.12:.2f}s">')
-        s.add(f'<rect x="40" y="{y - 4}" width="28" height="28" rx="8" fill="{color}" fill-opacity=".15"/>')
-        s.add(icono(nombre, 46, y + 2, 16, color))
-        texto_rico(s, 82, y + 15, partes, 14.5)
+        s.add(f'<rect x="44.5" y="{y - 3.5}" width="29" height="29" rx="8" fill="{color}" fill-opacity=".1" stroke="{color}" stroke-opacity=".3"/>')
+        s.add(icono(nombre, 51, y + 3, 16, color))
+        texto_rico(s, 88, y + 16, partes, 14.5)
         s.add("</g>")
     return s.render()
 
 
-def boton(texto: str, nombre_icono: str, tema: str) -> str:
-    c = GH[tema]
-    tam, alto = 13, 34
-    ancho = 12 + 16 + 8 + GEIST_B.ancho(texto, tam) + 14
+def boton(texto: str, nombre_icono: str) -> str:
+    tam, alto = 13, 36
+    ancho = 14 + 16 + 9 + GEIST_B.ancho(texto, tam) + 16
     s = Svg(ancho, alto, texto)
-    s.add(f'<rect x=".5" y=".5" width="{ancho - 1:.1f}" height="{alto - 1}" rx="8" fill="{c["chip"]}" stroke="{c["border"]}"/>')
-    s.add(icono(nombre_icono, 12, alto / 2 - 8, 16, c["fg"]))
-    s.t(36, alto / 2 + 4.6, texto, tam, GEIST_B, c["fg"])
+    s.add(f'<rect x=".5" y=".5" width="{ancho - 1:.1f}" height="{alto - 1}" rx="8" fill="#0a0a0a" stroke="#2a2a30"/>')
+    s.add(icono(nombre_icono, 14, alto / 2 - 8, 16, "#a1a1aa"))
+    s.t(39, alto / 2 + 4.6, texto, tam, GEIST_B, "#e4e4e7")
     return s.render()
 
 
@@ -613,7 +621,8 @@ def stack(tema: str) -> str:
 
 def imagen(nombre: str, alt: str, ancho: str, temas=True) -> str:
     if not temas:
-        return f'<img src="./assets/{nombre}.svg" alt="{esc(alt)}" width="{ancho}" />'
+        w = f' width="{ancho}"' if ancho != "auto" else ""
+        return f'<img src="./assets/{nombre}.svg" alt="{esc(alt)}"{w} />'
     return (f'<picture><source media="(prefers-color-scheme: dark)" srcset="./assets/{nombre}-dark.svg" />'
             f'<img src="./assets/{nombre}-light.svg" alt="{esc(alt)}" width="{ancho}" /></picture>')
 
@@ -628,8 +637,8 @@ def readme() -> str:
             f'  <a href="{href}">{imagen(f"proyecto-{pid}", alt, "49%", temas=False)}</a>'
             for pid, href, alt in PROYECTOS[i:i + 2]) + "\n</p>")
     otros = " · ".join(f"[{n}]({u})" for n, u in OTROS)
-    botones = "\n".join(f'  <a href="{href}">{imagen(f"boton-{clave}", texto, "auto")}</a>' for clave, texto, _, href in BOTONES)
-    return f"""{imagen("presentacion", "Hola, soy Facu. Estudio Ingeniería en Sistemas en la UTN FRRe y me gusta construir cosas que la gente use de verdad. Ahora mismo: miFACU como cofundador y Juegachos como maintainer.", "100%")}
+    botones = "\n".join(f'  <a href="{href}">{imagen(f"boton-{clave}", texto, "auto", temas=False)}</a>' for clave, texto, _, href in BOTONES)
+    return f"""{imagen("presentacion", "Hola, soy Facu. Estudio Ingeniería en Sistemas en la UTN FRRe y me gusta construir cosas que la gente use de verdad. Ahora mismo: miFACU como cofundador y Juegachos como maintainer.", "100%", temas=False)}
 
 <p>
 {botones}
@@ -664,10 +673,10 @@ def main():
         viejo.unlink()
     archivos = {}
     for tema in GH:
-        archivos[f"presentacion-{tema}"] = presentacion(tema)
-        for clave, texto, nombre_icono, _ in BOTONES:
-            archivos[f"boton-{clave}-{tema}"] = boton(texto, nombre_icono, tema)
         archivos[f"stack-{tema}"] = stack(tema)
+    archivos["presentacion"] = presentacion()
+    for clave, texto, nombre_icono, _ in BOTONES:
+        archivos[f"boton-{clave}"] = boton(texto, nombre_icono)
     archivos["encabezado"] = encabezado()
     for pid, fn in TARJETAS.items():
         archivos[f"proyecto-{pid}"] = fn()

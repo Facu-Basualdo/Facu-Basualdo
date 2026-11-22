@@ -1,9 +1,9 @@
-<picture><source media="(prefers-color-scheme: dark)" srcset="./assets/presentacion-dark.svg" /><img src="./assets/presentacion-light.svg" alt="Hola, soy Facu. Estudio Ingeniería en Sistemas en la UTN FRRe y me gusta construir cosas que la gente use de verdad. Ahora mismo: miFACU como cofundador y Juegachos como maintainer." width="100%" /></picture>
+<img src="./assets/presentacion.svg" alt="Hola, soy Facu. Estudio Ingeniería en Sistemas en la UTN FRRe y me gusta construir cosas que la gente use de verdad. Ahora mismo: miFACU como cofundador y Juegachos como maintainer." width="100%" />
 
 <p>
-  <a href="mailto:facundo@basualdo.dev"><picture><source media="(prefers-color-scheme: dark)" srcset="./assets/boton-email-dark.svg" /><img src="./assets/boton-email-light.svg" alt="facundo@basualdo.dev" width="auto" /></picture></a>
-  <a href="https://basualdo.dev"><picture><source media="(prefers-color-scheme: dark)" srcset="./assets/boton-web-dark.svg" /><img src="./assets/boton-web-light.svg" alt="basualdo.dev" width="auto" /></picture></a>
-  <a href="https://www.linkedin.com/in/facu-basualdo/"><picture><source media="(prefers-color-scheme: dark)" srcset="./assets/boton-linkedin-dark.svg" /><img src="./assets/boton-linkedin-light.svg" alt="LinkedIn" width="auto" /></picture></a>
+  <a href="mailto:facundo@basualdo.dev"><img src="./assets/boton-email.svg" alt="facundo@basualdo.dev" /></a>
+  <a href="https://basualdo.dev"><img src="./assets/boton-web.svg" alt="basualdo.dev" /></a>
+  <a href="https://www.linkedin.com/in/facu-basualdo/"><img src="./assets/boton-linkedin.svg" alt="LinkedIn" /></a>
 </p>
 
 <a href="https://basualdo.dev"><img src="./assets/encabezado.svg" alt="git log de Facundo Basualdo: dev full-stack en Resistencia, Chaco. Cofundador de miFACU, creador de Juegachos, autor de Brillo y parte del equipo de Arco." width="100%" /></a>
